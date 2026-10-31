@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GamerVault - Catálogo de Productos</title>
+  <style>
+    :root {
+      --bg-dark: #0a0814;
+      --card-bg: #15102a;
+      --border-color: #2e2055;
+      --accent-purple: #a855f7;
+      --accent-neon-purple: #d8b4fe;
+      --accent-glow: #9333ea;
+      --text-main: #f3e8ff;
+      --text-muted: #a78bfa;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+
+    header {
+      background-color: var(--card-bg);
+      border-bottom: 2px solid var(--accent-glow);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo { color: var(--accent-neon-purple); font-size: 1.5rem; text-transform: uppercase; font-weight: bold; }
+    nav a { color: var(--text-muted); text-decoration: none; margin-left: 1.5rem; font-weight: 600; }
+    nav a:hover, nav a.active { color: var(--accent-neon-purple); text-shadow: 0 0 8px var(--accent-glow); }
+
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; width: 100%; }
+
+    /* Barra de Búsqueda */
+    .search-box {
+      width: 100%;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      outline: none;
+    }
+    .search-box:focus { border-color: var(--accent-purple); box-shadow: 0 0 10px rgba(168, 85, 247, 0.3); }
+
+    /* Cards de Productos */
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
+    .product-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .product-card:hover { border-color: var(--accent-purple); }
+    .product-category { color: var(--accent-neon-purple); font-size: 0.75rem; text-transform: uppercase; font-weight: bold; }
+    .product-title { font-size: 1.1rem; margin: 0.5rem 0; }
+    .product-price { font-size: 1.3rem; font-weight: bold; color: var(--text-main); }
+    .product-stock { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">🎮 GamerVault</div>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="productos.html" class="active">Catálogo</a>
+      <a href="gestion.html">Gestión (CRUD)</a>
+      <a href="usuarios.html">Usuarios</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <h2>Catálogo de Existencias</h2>
+    <br>
+    <input type="text" class="search-box" id="search" placeholder="🔍 Buscar productos por nombre o categoría..." onkeyup="filterCards()">
+
+    <div class="products-grid" id="grid">
+      <div class="product-card" data-name="teclado mecanico rgb" data-cat="perifericos">
+        <div>
+          <span class="product-category">Periféricos</span>
+          <h3 class="product-title">Teclado Mecánico RGB</h3>
+        </div>
+        <div>
+          <div class="product-price">$79.99</div>
+          <div class="product-stock">Stock: 12 unidades</div>
+        </div>
+      </div>
+
+      <div class="product-card" data-name="rtx 4070 12gb" data-cat="componentes">
+        <div>
+          <span class="product-category">Componentes</span>
+          <h3 class="product-title">Tarjeta RTX 4070 12GB</h3>
+        </div>
+        <div>
+          <div class="product-price">$699.00</div>
+          <div class="product-stock">Stock: 4 unidades</div>
+        </div>
+      </div>
+
+      <div class="product-card" data-name="audifonos 7.1 pro" data-cat="perifericos">
+        <div>
+          <span class="product-category">Periféricos</span>
+          <h3 class="product-title">Audífonos 7.1 Surround</h3>
+        </div>
+        <div>
+          <div class="product-price">$89.50</div>
+          <div class="product-stock">Stock: 20 unidades</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function filterCards() {
+      const q = document.getElementById('search').value.toLowerCase();
+      document.querySelectorAll('.product-card').forEach(card => {
+        const name = card.getAttribute('data-name');
+        const cat = card.getAttribute('data-cat');
+        card.style.display = (name.includes(q) || cat.includes(q)) ? 'flex' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>
