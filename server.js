@@ -36,10 +36,13 @@ const ProductoSchema = new mongoose.Schema({
 
 const UsuarioSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
+  apPaterno: { type: String, required: true },
+  apMaterno: { type: String, default: '' },
+  usuario: { type: String, required: true, unique: true },
   correo: { type: String, required: true },
   telefono: { type: String, default: '' },
-  direccion: { type: String, default: '' },
   identificacion: { type: String, default: '' },
+  direccion: { type: String, default: '' },
   password: { type: String, required: true },
   rol: { type: String, required: true },
   estado: { type: String, default: 'Activo' }
