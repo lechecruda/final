@@ -16,64 +16,27 @@
       --text-muted: #a78bfa;
       --danger: #f43f5e;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
-
-    header {
-      background-color: var(--card-bg);
-      border-bottom: 2px solid var(--accent-glow);
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
+    header { background-color: var(--card-bg); border-bottom: 2px solid var(--accent-glow); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
     .logo { color: var(--accent-neon-purple); font-size: 1.5rem; text-transform: uppercase; font-weight: bold; }
     nav a { color: var(--text-muted); text-decoration: none; margin-left: 1.5rem; font-weight: 600; }
     nav a:hover, nav a.active { color: var(--accent-neon-purple); text-shadow: 0 0 8px var(--accent-glow); }
-
     .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; width: 100%; }
-
-    .form-card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
+    .form-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
     .input-group { display: flex; flex-direction: column; gap: 0.4rem; }
     .input-group label { font-size: 0.85rem; color: var(--text-muted); }
-    .input-group input, .input-group select {
-      background-color: var(--bg-dark);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 0.6rem;
-      border-radius: 4px;
-      outline: none;
-    }
-
-    .btn {
-      padding: 0.6rem 1.2rem;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-      text-transform: uppercase;
-      font-size: 0.8rem;
-    }
+    .input-group input, .input-group select { background-color: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.6rem; border-radius: 4px; outline: none; }
+    .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.8rem; }
     .btn-primary { background-color: var(--accent-purple); color: white; margin-top: 1rem; }
     .btn-danger { background-color: var(--danger); color: white; }
-
     table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); border-radius: 8px; overflow: hidden; }
     th, td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border-color); text-align: left; }
     th { background-color: #0d0a1d; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; }
   </style>
 </head>
 <body>
-
   <header>
     <div class="logo">🎮 GamerVault</div>
     <nav>
@@ -128,7 +91,6 @@
         </tr>
       </thead>
       <tbody id="tabla-body">
-        <!-- Carga dinámica -->
       </tbody>
     </table>
   </div>
@@ -136,7 +98,6 @@
 <script>
   const API_URL = '/api/productos';
 
-  // Cargar lista desde la BD
   async function cargarProductos() {
     try {
       const res = await fetch(API_URL);
@@ -169,7 +130,6 @@
     }
   }
 
-  // Guardar / Modificar
   document.getElementById('crud-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
@@ -191,20 +151,23 @@
         body: JSON.stringify(data)
       });
 
-      if (!res.ok) throw new Error('Error al guardar registro');
+      const resData = await res.json();
+
+      if (!res.ok) {
+        throw new Error(resData.error || 'Error al guardar el registro');
+      }
 
       document.getElementById('crud-form').reset();
       document.getElementById('prod-id').value = '';
       await cargarProductos();
     } catch (err) {
-      alert('Ocurrió un problema al conectar con la base de datos: ' + err.message);
+      alert('Detalle del problema: ' + err.message);
     } finally {
       btn.disabled = false;
       btn.textContent = 'Guardar Registro';
     }
   });
 
-  // Editar
   function editar(id, nombre, categoria, precio, stock) {
     document.getElementById('prod-id').value = id;
     document.getElementById('p-nombre').value = nombre;
@@ -213,7 +176,6 @@
     document.getElementById('p-stock').value = stock;
   }
 
-  // Eliminar
   async function eliminar(id) {
     if (confirm('¿Deseas dar de baja este producto?')) {
       try {
