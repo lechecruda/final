@@ -80,26 +80,26 @@
     <div class="form-card">
       <h2>Control de Usuarios y Permisos</h2>
       <br>
-      <form>
+      <form id="user-form">
         <div class="form-grid">
           <div class="input-group">
             <label>Nombre Completo</label>
-            <input type="text" placeholder="Ej. Alex Ramírez" required>
+            <input type="text" id="u-nombre" placeholder="Ej. Alex Ramírez" required>
           </div>
           <div class="input-group">
             <label>Correo Electrónico</label>
-            <input type="email" placeholder="usuario@gamervault.com" required>
+            <input type="email" id="u-correo" placeholder="usuario@gamervault.com" required>
           </div>
           <div class="input-group">
             <label>Rol</label>
-            <select required>
+            <select id="u-rol" required>
               <option value="Admin">Administrador</option>
               <option value="Operador">Operador de Almacén</option>
               <option value="Consulta">Solo Lectura</option>
             </select>
           </div>
         </div>
-        <button type="submit" class="btn btn-primary">Registrar Usuario</button>
+        <button type="submit" id="btn-user-submit" class="btn btn-primary">Registrar Usuario</button>
       </form>
     </div>
 
@@ -113,75 +113,11 @@
           <th>Acciones</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <td>#USR-01</td>
-          <td>Alex Ramírez</td>
-          <td>alex@gamervault.com</td>
-          <td><span style="color: var(--accent-neon-purple); font-weight: bold;">Administrador</span></td>
-          <td>
-            <button class="btn btn-primary" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Editar</button>
-            <button class="btn btn-danger" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Eliminar</button>
-          </td>
-        </tr>
+      <tbody id="usuarios-tbody">
+        <!-- Carga dinámica -->
       </tbody>
     </table>
   </div>
+
 <script>
-  const API_USERS = '/api/usuarios';
-
-  async function cargarUsuarios() {
-    try {
-      const res = await fetch(API_USERS);
-      const usuarios = await res.json();
-      const tbody = document.querySelector('tbody');
-      tbody.innerHTML = '';
-
-      usuarios.forEach(u => {
-        tbody.innerHTML += `
-          <tr>
-            <td>#USR-${u._id.substring(u._id.length - 4)}</td>
-            <td>${u.nombre}</td>
-            <td>${u.correo}</td>
-            <td><span style="color: var(--accent-neon-purple); font-weight: bold;">${u.rol}</span></td>
-            <td>
-              <button class="btn btn-danger" onclick="eliminarUsuario('${u._id}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Eliminar</button>
-            </td>
-          </tr>
-        `;
-      });
-    } catch (err) {
-      console.error('Error cargando usuarios:', err);
-    }
-  }
-
-  document.querySelector('form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const inputs = e.target.querySelectorAll('input, select');
-    const data = {
-      nombre: inputs[0].value,
-      correo: inputs[1].value,
-      rol: inputs[2].value
-    };
-
-    await fetch(API_USERS, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-
-    e.target.reset();
-    cargarUsuarios();
-  });
-
-  async function eliminarUsuario(id) {
-    if (confirm('¿Eliminar este usuario de la base de datos?')) {
-      await fetch(`${API_USERS}/${id}`, { method: 'DELETE' });
-      cargarUsuarios();
-    }
-  }
-
-  cargarUsuarios();
-</script>
-</body>
-</html>
+  const API
