@@ -141,6 +141,98 @@
       </tbody>
     </table>
   </div>
+<script>
+  const API_URL = '/api/productos';
 
+  // 1. Cargar productos desde la BD al abrir la página
+  async function cargarProductos() {
+    try {
+      const res = await fetch(API_URL);
+      const productos = await res.json();
+      const tbody = document.querySelector('tbody');
+      tbody.innerHTML = '';
+
+      productos.forEach(p => {
+        tbody.innerHTML += `
+          <tr>
+            <td>#${p._id.substring(p._id.length - 6)}</td>
+            <td>${p.nombre}</td>
+            <td>${p.categoria}</td>
+            <td>$${Number(p.precio).toFixed(2)}</td>
+            <td>${p.stock}</td>
+            <td>
+              <button class="btn btn-primary" onclick="editar('${p._id}', '${p.nombre}', '${p.categoria}', ${p.precio}, ${p.stock})" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Editar</button>
+              <button class="btn btn-danger" onclick="eliminar('${p._id}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Baja</button>
+            </td>
+          </tr>
+        `;
+      });
+    } catch (err) {
+      console.error('Error cargando productos:', err);
+    }
+  }
+
+  // 2. Evento para Guardar o Actualizar
+  document.getElementById('crud-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Obtener valores de los inputs por su orden en el formulario
+    const inputs = e.target.querySelectorAll('input, select');
+    const id = document.getElementById('prod-id')?.value;
+
+    const data = {
+      nombre: inputs[0].value,
+      categoria: inputs[1].value,
+      precio: parseFloat(inputs[2].value),
+      stock: parseInt(inputs[3].value)
+    };
+
+    if (id) {
+      await fetch(`${API_URL}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } else {
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    }
+
+    e.target.reset();
+    if (document.getElementById('prod-id')) document.getElementById('prod-id').value = '';
+    cargarProductos();
+  });
+
+  // 3. Preparar formulario para editar
+  function editar(id, nombre, categoria, precio, stock) {
+    let inputId = document.getElementById('prod-id');
+    if (!inputId) {
+      inputId = document.createElement('input');
+      inputId.type = 'hidden';
+      inputId.id = 'prod-id';
+      document.getElementById('crud-form').appendChild(inputId);
+    }
+    inputId.value = id;
+
+    const inputs = document.querySelectorAll('#crud-form input, #crud-form select');
+    inputs[0].value = nombre;
+    inputs[1].value = categoria;
+    inputs[2].value = precio;
+    inputs[3].value = stock;
+  }
+
+  // 4. Eliminar producto
+  async function eliminar(id) {
+    if (confirm('¿Deseas dar de baja este producto?')) {
+      await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+      cargarProductos();
+    }
+  }
+
+  cargarProductos();
+</script>
 </body>
 </html>
