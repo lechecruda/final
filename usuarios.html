@@ -127,6 +127,61 @@
       </tbody>
     </table>
   </div>
+<script>
+  const API_USERS = '/api/usuarios';
 
+  async function cargarUsuarios() {
+    try {
+      const res = await fetch(API_USERS);
+      const usuarios = await res.json();
+      const tbody = document.querySelector('tbody');
+      tbody.innerHTML = '';
+
+      usuarios.forEach(u => {
+        tbody.innerHTML += `
+          <tr>
+            <td>#USR-${u._id.substring(u._id.length - 4)}</td>
+            <td>${u.nombre}</td>
+            <td>${u.correo}</td>
+            <td><span style="color: var(--accent-neon-purple); font-weight: bold;">${u.rol}</span></td>
+            <td>
+              <button class="btn btn-danger" onclick="eliminarUsuario('${u._id}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      });
+    } catch (err) {
+      console.error('Error cargando usuarios:', err);
+    }
+  }
+
+  document.querySelector('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const inputs = e.target.querySelectorAll('input, select');
+    const data = {
+      nombre: inputs[0].value,
+      correo: inputs[1].value,
+      rol: inputs[2].value
+    };
+
+    await fetch(API_USERS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    e.target.reset();
+    cargarUsuarios();
+  });
+
+  async function eliminarUsuario(id) {
+    if (confirm('¿Eliminar este usuario de la base de datos?')) {
+      await fetch(`${API_USERS}/${id}`, { method: 'DELETE' });
+      cargarUsuarios();
+    }
+  }
+
+  cargarUsuarios();
+</script>
 </body>
 </html>
