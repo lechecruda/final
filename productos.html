@@ -119,14 +119,47 @@
   </div>
 
   <script>
-    function filterCards() {
-      const q = document.getElementById('search').value.toLowerCase();
-      document.querySelectorAll('.product-card').forEach(card => {
-        const name = card.getAttribute('data-name');
-        const cat = card.getAttribute('data-cat');
-        card.style.display = (name.includes(q) || cat.includes(q)) ? 'flex' : 'none';
+  async function cargarCatalogo() {
+    try {
+      const res = await fetch('/api/productos');
+      const productos = await res.json();
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+
+      if (productos.length === 0) {
+        grid.innerHTML = '<p style="color: var(--text-muted);">No hay productos registrados en la base de datos.</p>';
+        return;
+      }
+
+      productos.forEach(p => {
+        grid.innerHTML += `
+          <div class="product-card" data-name="${p.nombre.toLowerCase()}" data-cat="${p.categoria.toLowerCase()}">
+            <div>
+              <span class="product-category">${p.categoria}</span>
+              <h3 class="product-title">${p.nombre}</h3>
+            </div>
+            <div>
+              <div class="product-price">$${Number(p.precio).toFixed(2)}</div>
+              <div class="product-stock">Stock: ${p.stock} unidades</div>
+            </div>
+          </div>
+        `;
       });
+    } catch (err) {
+      console.error('Error al cargar catálogo:', err);
     }
-  </script>
+  }
+
+  function filterCards() {
+    const q = document.getElementById('search').value.toLowerCase();
+    document.querySelectorAll('.product-card').forEach(card => {
+      const name = card.getAttribute('data-name');
+      const cat = card.getAttribute('data-cat');
+      card.style.display = (name.includes(q) || cat.includes(q)) ? 'flex' : 'none';
+    });
+  }
+
+  cargarCatalogo();
+</script>
 </body>
 </html>
