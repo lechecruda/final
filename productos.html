@@ -83,83 +83,55 @@
     <input type="text" class="search-box" id="search" placeholder="🔍 Buscar productos por nombre o categoría..." onkeyup="filterCards()">
 
     <div class="products-grid" id="grid">
-      <div class="product-card" data-name="teclado mecanico rgb" data-cat="perifericos">
-        <div>
-          <span class="product-category">Periféricos</span>
-          <h3 class="product-title">Teclado Mecánico RGB</h3>
-        </div>
-        <div>
-          <div class="product-price">$79.99</div>
-          <div class="product-stock">Stock: 12 unidades</div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="rtx 4070 12gb" data-cat="componentes">
-        <div>
-          <span class="product-category">Componentes</span>
-          <h3 class="product-title">Tarjeta RTX 4070 12GB</h3>
-        </div>
-        <div>
-          <div class="product-price">$699.00</div>
-          <div class="product-stock">Stock: 4 unidades</div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="audifonos 7.1 pro" data-cat="perifericos">
-        <div>
-          <span class="product-category">Periféricos</span>
-          <h3 class="product-title">Audífonos 7.1 Surround</h3>
-        </div>
-        <div>
-          <div class="product-price">$89.50</div>
-          <div class="product-stock">Stock: 20 unidades</div>
-        </div>
-      </div>
+      <p style="color: var(--text-muted);">Cargando catálogo desde MongoDB...</p>
     </div>
   </div>
 
   <script>
-  async function cargarCatalogo() {
-    try {
-      const res = await fetch('/api/productos');
-      const productos = await res.json();
+    async function cargarCatalogo() {
       const grid = document.getElementById('grid');
-      grid.innerHTML = '';
+      try {
+        const res = await fetch('/api/productos');
+        if (!res.ok) throw new Error('Respuesta de red KO');
+        
+        const productos = await res.json();
+        grid.innerHTML = '';
 
-      if (productos.length === 0) {
-        grid.innerHTML = '<p style="color: var(--text-muted);">No hay productos registrados en la base de datos.</p>';
-        return;
+        if (!Array.isArray(productos) || productos.length === 0) {
+          grid.innerHTML = '<p style="color: var(--text-muted);">No hay productos registrados en la base de datos.</p>';
+          return;
+        }
+
+        productos.forEach(p => {
+          grid.innerHTML += `
+            <div class="product-card" data-name="${(p.nombre || '').toLowerCase()}" data-cat="${(p.categoria || '').toLowerCase()}">
+              <div>
+                <span class="product-category">${p.categoria}</span>
+                <h3 class="product-title">${p.nombre}</h3>
+              </div>
+              <div>
+                <div class="product-price">$${Number(p.precio || 0).toFixed(2)}</div>
+                <div class="product-stock">Stock: ${p.stock} unidades</div>
+              </div>
+            </div>
+          `;
+        });
+      } catch (err) {
+        console.error('Error al cargar catálogo:', err);
+        grid.innerHTML = '<p style="color: var(--text-muted);">Error al cargar los datos desde el servidor.</p>';
       }
-
-      productos.forEach(p => {
-        grid.innerHTML += `
-          <div class="product-card" data-name="${p.nombre.toLowerCase()}" data-cat="${p.categoria.toLowerCase()}">
-            <div>
-              <span class="product-category">${p.categoria}</span>
-              <h3 class="product-title">${p.nombre}</h3>
-            </div>
-            <div>
-              <div class="product-price">$${Number(p.precio).toFixed(2)}</div>
-              <div class="product-stock">Stock: ${p.stock} unidades</div>
-            </div>
-          </div>
-        `;
-      });
-    } catch (err) {
-      console.error('Error al cargar catálogo:', err);
     }
-  }
 
-  function filterCards() {
-    const q = document.getElementById('search').value.toLowerCase();
-    document.querySelectorAll('.product-card').forEach(card => {
-      const name = card.getAttribute('data-name');
-      const cat = card.getAttribute('data-cat');
-      card.style.display = (name.includes(q) || cat.includes(q)) ? 'flex' : 'none';
-    });
-  }
+    function filterCards() {
+      const q = document.getElementById('search').value.toLowerCase();
+      document.querySelectorAll('.product-card').forEach(card => {
+        const name = card.getAttribute('data-name') || '';
+        const cat = card.getAttribute('data-cat') || '';
+        card.style.display = (name.includes(q) || cat.includes(q)) ? 'flex' : 'none';
+      });
+    }
 
-  cargarCatalogo();
-</script>
+    cargarCatalogo();
+  </script>
 </body>
 </html>
