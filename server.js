@@ -8,28 +8,14 @@ const PORT = process.env.PORT || 8080;
 app.use(express.json());
 app.use(express.static(__dirname));
 
-const MONGO_URI = process.env.MONGODB_URI;
-
-// Middleware para asegurar que la conexión esté activa antes de procesar guardar/consultar
-async function conectarBD(req, res, next) {
-  if (mongoose.connection.readyState !== 1) {
-    try {
-      if (MONGO_URI) {
-        await mongoose.connect(MONGO_URI, {
-          dbName: 'Productos',
-          serverSelectionTimeoutMS: 5000
-        });
-        console.log('✅ Conexión establecida con Azure MongoDB');
-      } else {
-        return res.status(500).json({ error: 'Falta la variable MONGODB_URI en Azure' });
-      }
-    } catch (err) {
-      console.error('❌ Error de conexión:', err.message);
-      return res.status(500).json({ error: 'No se pudo conectar a MongoDB: ' + err.message });
-    }
-  }
-  next();
+// Sanitización de la URI para evitar "URI malformed"
+let MONGO_URI = process.env.MONGODB_URI || '';
+if (MONGO_URI) {
+  MONGO_URI = MONGO_URI.trim().replace(/^["']|["']$/g, '');
 }
+
+// Desactivar buffering para respuestas inmediatas
+mongoose.set('bufferCommands', false);
 
 // Modelos
 const ProductoSchema = new mongoose.Schema({
@@ -48,8 +34,31 @@ const UsuarioSchema = new mongoose.Schema({
 const Producto = mongoose.model('Producto', ProductoSchema);
 const Usuario = mongoose.model('Usuario', UsuarioSchema);
 
-// Rutas de API con middleware de conexión previa
-app.get('/api/productos', conectarBD, async (req, res) => {
+// Middleware de conexión
+async function asegurarConexion(req, res, next) {
+  if (mongoose.connection.readyState === 1) {
+    return next();
+  }
+
+  if (!MONGO_URI) {
+    return res.status(500).json({ error: 'La variable MONGODB_URI no existe en Azure' });
+  }
+
+  try {
+    await mongoose.connect(MONGO_URI, {
+      dbName: 'Productos',
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000
+    });
+    next();
+  } catch (err) {
+    console.error('Error al conectar a MongoDB:', err.message);
+    return res.status(503).json({ error: 'No se pudo conectar a MongoDB: ' + err.message });
+  }
+}
+
+// API ENDPOINTS - PRODUCTOS
+app.get('/api/productos', asegurarConexion, async (req, res) => {
   try {
     const productos = await Producto.find();
     res.json(productos);
@@ -58,23 +67,23 @@ app.get('/api/productos', conectarBD, async (req, res) => {
   }
 });
 
-app.post('/api/productos', conectarBD, async (req, res) => {
+app.post('/api/productos', asegurarConexion, async (req, res) => {
   try {
     const { nombre, categoria, precio, stock } = req.body;
-    const nuevoProducto = new Producto({
+    const nuevo = new Producto({
       nombre,
       categoria,
       precio: Number(precio),
       stock: Number(stock)
     });
-    const guardado = await nuevoProducto.save();
+    const guardado = await nuevo.save();
     res.status(201).json(guardado);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-app.put('/api/productos/:id', conectarBD, async (req, res) => {
+app.put('/api/productos/:id', asegurarConexion, async (req, res) => {
   try {
     const actualizado = await Producto.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(actualizado);
@@ -83,7 +92,7 @@ app.put('/api/productos/:id', conectarBD, async (req, res) => {
   }
 });
 
-app.delete('/api/productos/:id', conectarBD, async (req, res) => {
+app.delete('/api/productos/:id', asegurarConexion, async (req, res) => {
   try {
     await Producto.findByIdAndDelete(req.params.id);
     res.json({ mensaje: 'Producto eliminado' });
@@ -92,7 +101,8 @@ app.delete('/api/productos/:id', conectarBD, async (req, res) => {
   }
 });
 
-app.get('/api/usuarios', conectarBD, async (req, res) => {
+// API ENDPOINTS - USUARIOS
+app.get('/api/usuarios', asegurarConexion, async (req, res) => {
   try {
     const usuarios = await Usuario.find();
     res.json(usuarios);
@@ -101,17 +111,17 @@ app.get('/api/usuarios', conectarBD, async (req, res) => {
   }
 });
 
-app.post('/api/usuarios', conectarBD, async (req, res) => {
+app.post('/api/usuarios', asegurarConexion, async (req, res) => {
   try {
-    const nuevoUsuario = new Usuario(req.body);
-    const guardado = await nuevoUsuario.save();
+    const nuevo = new Usuario(req.body);
+    const guardado = await nuevo.save();
     res.status(201).json(guardado);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-app.delete('/api/usuarios/:id', conectarBD, async (req, res) => {
+app.delete('/api/usuarios/:id', asegurarConexion, async (req, res) => {
   try {
     await Usuario.findByIdAndDelete(req.params.id);
     res.json({ mensaje: 'Usuario eliminado' });
@@ -125,5 +135,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor iniciado en puerto ${PORT}`);
+  console.log(`Servidor en puerto ${PORT}`);
 });
