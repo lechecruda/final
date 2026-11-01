@@ -10,14 +10,11 @@ app.use(express.static(__dirname));
 
 const MONGO_URI = process.env.MONGODB_URI;
 
-// Configuración de conexión tolerante a TLS de Azure
 if (MONGO_URI) {
+  // Dejamos que la URI maneje el TLS/SSL de Azure de forma nativa
   mongoose.connect(MONGO_URI, {
     dbName: 'Productos',
-    tls: true,
-    tlsAllowInvalidCertificates: true,
-    connectTimeoutMS: 10000,
-    serverSelectionTimeoutMS: 10000
+    serverSelectionTimeoutMS: 5000
   })
   .then(() => console.log('✅ Conectado exitosamente a la BD "Productos" en Azure'))
   .catch(err => console.error('❌ Error de conexión:', err.message));
@@ -26,7 +23,7 @@ if (MONGO_URI) {
 }
 
 // ------------------------------------------------------------------
-// SCHEMAS Y MODELOS
+// SCHEMAS Y MODELOS (Mapeados a tus colecciones exactas de Compass)
 // ------------------------------------------------------------------
 const ProductoSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
@@ -45,14 +42,13 @@ const Producto = mongoose.model('Producto', ProductoSchema);
 const Usuario = mongoose.model('Usuario', UsuarioSchema);
 
 // ------------------------------------------------------------------
-// ENDPOINTS API - PRODUCTOS
+// API ENDPOINTS - PRODUCTOS
 // ------------------------------------------------------------------
 app.get('/api/productos', async (req, res) => {
   try {
     const productos = await Producto.find();
     res.json(productos);
   } catch (err) {
-    console.error('Error GET /api/productos:', err);
     res.status(500).json({ error: 'Error al consultar la BD: ' + err.message });
   }
 });
@@ -75,7 +71,7 @@ app.post('/api/productos', async (req, res) => {
     const guardado = await nuevoProducto.save();
     res.status(201).json(guardado);
   } catch (err) {
-    console.error('Error POST /api/productos:', err);
+    console.error('Error en POST /api/productos:', err);
     res.status(400).json({ error: 'Error al guardar: ' + err.message });
   }
 });
@@ -99,7 +95,7 @@ app.delete('/api/productos/:id', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// ENDPOINTS API - USUARIOS
+// API ENDPOINTS - USUARIOS
 // ------------------------------------------------------------------
 app.get('/api/usuarios', async (req, res) => {
   try {
@@ -129,11 +125,11 @@ app.delete('/api/usuarios/:id', async (req, res) => {
   }
 });
 
-// Servir la página principal por defecto
+// Ruta principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor iniciado en puerto ${PORT}`);
+  console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
