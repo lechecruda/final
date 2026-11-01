@@ -8,27 +8,41 @@ const PORT = process.env.PORT || 8080;
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// Sanitización de la URI para evitar "URI malformed"
 let MONGO_URI = process.env.MONGODB_URI || '';
+
 if (MONGO_URI) {
   MONGO_URI = MONGO_URI.trim().replace(/^["']|["']$/g, '');
+  if (MONGO_URI.includes('%') && !MONGO_URI.includes('%25')) {
+    MONGO_URI = MONGO_URI.replace(/%(?![0-9a-fA-F]{2})/g, '%25');
+  }
 }
 
-// Desactivar buffering para respuestas inmediatas
 mongoose.set('bufferCommands', false);
 
-// Modelos
+// ------------------------------------------------------------------
+// SCHEMAS AMPLIADOS
+// ------------------------------------------------------------------
 const ProductoSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
+  sku: { type: String, default: '' },
+  marca: { type: String, default: '' },
   categoria: { type: String, required: true },
   precio: { type: Number, required: true },
-  stock: { type: Number, required: true }
+  stock: { type: Number, required: true },
+  proveedor: { type: String, default: '' },
+  ubicacion: { type: String, default: '' },
+  descripcion: { type: String, default: '' }
 }, { collection: 'productos', timestamps: true });
 
 const UsuarioSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
   correo: { type: String, required: true },
-  rol: { type: String, required: true }
+  telefono: { type: String, default: '' },
+  direccion: { type: String, default: '' },
+  identificacion: { type: String, default: '' },
+  password: { type: String, required: true },
+  rol: { type: String, required: true },
+  estado: { type: String, default: 'Activo' }
 }, { collection: 'usuarios', timestamps: true });
 
 const Producto = mongoose.model('Producto', ProductoSchema);
@@ -36,13 +50,8 @@ const Usuario = mongoose.model('Usuario', UsuarioSchema);
 
 // Middleware de conexión
 async function asegurarConexion(req, res, next) {
-  if (mongoose.connection.readyState === 1) {
-    return next();
-  }
-
-  if (!MONGO_URI) {
-    return res.status(500).json({ error: 'La variable MONGODB_URI no existe en Azure' });
-  }
+  if (mongoose.connection.readyState === 1) return next();
+  if (!MONGO_URI) return res.status(500).json({ error: 'Falta MONGODB_URI en Azure' });
 
   try {
     await mongoose.connect(MONGO_URI, {
@@ -52,12 +61,11 @@ async function asegurarConexion(req, res, next) {
     });
     next();
   } catch (err) {
-    console.error('Error al conectar a MongoDB:', err.message);
-    return res.status(503).json({ error: 'No se pudo conectar a MongoDB: ' + err.message });
+    return res.status(503).json({ error: 'Error de conexión: ' + err.message });
   }
 }
 
-// API ENDPOINTS - PRODUCTOS
+// API PRODUCTOS
 app.get('/api/productos', asegurarConexion, async (req, res) => {
   try {
     const productos = await Producto.find();
@@ -69,13 +77,7 @@ app.get('/api/productos', asegurarConexion, async (req, res) => {
 
 app.post('/api/productos', asegurarConexion, async (req, res) => {
   try {
-    const { nombre, categoria, precio, stock } = req.body;
-    const nuevo = new Producto({
-      nombre,
-      categoria,
-      precio: Number(precio),
-      stock: Number(stock)
-    });
+    const nuevo = new Producto(req.body);
     const guardado = await nuevo.save();
     res.status(201).json(guardado);
   } catch (err) {
@@ -101,7 +103,7 @@ app.delete('/api/productos/:id', asegurarConexion, async (req, res) => {
   }
 });
 
-// API ENDPOINTS - USUARIOS
+// API USUARIOS
 app.get('/api/usuarios', asegurarConexion, async (req, res) => {
   try {
     const usuarios = await Usuario.find();
@@ -130,10 +132,10 @@ app.delete('/api/usuarios/:id', asegurarConexion, async (req, res) => {
   }
 });
 
-app.get('/', (req, res) => {
+app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor en puerto ${PORT}`);
+  console.log(`Servidor escuchando en puerto ${PORT}`);
 });
