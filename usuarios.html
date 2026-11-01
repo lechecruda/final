@@ -16,56 +16,27 @@
       --text-muted: #a78bfa;
       --danger: #f43f5e;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
-
-    header {
-      background-color: var(--card-bg);
-      border-bottom: 2px solid var(--accent-glow);
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
+    header { background-color: var(--card-bg); border-bottom: 2px solid var(--accent-glow); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
     .logo { color: var(--accent-neon-purple); font-size: 1.5rem; text-transform: uppercase; font-weight: bold; }
     nav a { color: var(--text-muted); text-decoration: none; margin-left: 1.5rem; font-weight: 600; }
     nav a:hover, nav a.active { color: var(--accent-neon-purple); text-shadow: 0 0 8px var(--accent-glow); }
-
     .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; width: 100%; }
-
-    .form-card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
+    .form-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
     .input-group { display: flex; flex-direction: column; gap: 0.4rem; }
     .input-group label { font-size: 0.85rem; color: var(--text-muted); }
-    .input-group input, .input-group select {
-      background-color: var(--bg-dark);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 0.6rem;
-      border-radius: 4px;
-      outline: none;
-    }
-
+    .input-group input, .input-group select { background-color: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.6rem; border-radius: 4px; outline: none; }
     .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.8rem; }
     .btn-primary { background-color: var(--accent-purple); color: white; margin-top: 1rem; }
     .btn-danger { background-color: var(--danger); color: white; }
-
     table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); border-radius: 8px; overflow: hidden; }
     th, td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border-color); text-align: left; }
     th { background-color: #0d0a1d; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; }
   </style>
 </head>
 <body>
-
   <header>
     <div class="logo">🎮 GamerVault</div>
     <nav>
@@ -114,10 +85,86 @@
         </tr>
       </thead>
       <tbody id="usuarios-tbody">
-        <!-- Carga dinámica -->
       </tbody>
     </table>
   </div>
 
 <script>
-  const API
+  const API_USERS = '/api/usuarios';
+
+  async function cargarUsuarios() {
+    try {
+      const res = await fetch(API_USERS);
+      const usuarios = await res.json();
+      const tbody = document.getElementById('usuarios-tbody');
+      tbody.innerHTML = '';
+
+      if (!Array.isArray(usuarios) || usuarios.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Sin usuarios registrados en la base de datos</td></tr>';
+        return;
+      }
+
+      usuarios.forEach(u => {
+        tbody.innerHTML += `
+          <tr>
+            <td>#USR-${u._id ? u._id.substring(u._id.length - 4) : 'N/A'}</td>
+            <td>${u.nombre}</td>
+            <td>${u.correo}</td>
+            <td><span style="color: var(--accent-neon-purple); font-weight: bold;">${u.rol}</span></td>
+            <td>
+              <button class="btn btn-danger" onclick="eliminarUsuario('${u._id}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      });
+    } catch (err) {
+      console.error('Error cargando usuarios:', err);
+    }
+  }
+
+  document.getElementById('user-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-user-submit');
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+
+    const data = {
+      nombre: document.getElementById('u-nombre').value,
+      correo: document.getElementById('u-correo').value,
+      rol: document.getElementById('u-rol').value
+    };
+
+    try {
+      const res = await fetch(API_USERS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (!res.ok) throw new Error('Error al registrar usuario');
+
+      document.getElementById('user-form').reset();
+      await cargarUsuarios();
+    } catch (err) {
+      alert('Error al guardar el usuario: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Registrar Usuario';
+    }
+  });
+
+  async function eliminarUsuario(id) {
+    if (confirm('¿Eliminar este usuario de la base de datos?')) {
+      try {
+        await fetch(`${API_USERS}/${id}`, { method: 'DELETE' });
+        cargarUsuarios();
+      } catch (err) {
+        console.error('Error al eliminar usuario:', err);
+      }
+    }
+  }
+
+  cargarUsuarios();
+</script>
+</body>
+</html>
