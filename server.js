@@ -8,15 +8,21 @@ const PORT = process.env.PORT || 8080;
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// Cadena de conexión
 const MONGO_URI = process.env.MONGODB_URI;
 
+// Configuración de conexión tolerante a TLS de Azure
 if (MONGO_URI) {
-  mongoose.connect(MONGO_URI, { dbName: 'Productos' })
-    .then(() => console.log('✅ Conectado a MongoDB en Azure'))
-    .catch(err => console.error('❌ Error de conexión a MongoDB:', err.message));
+  mongoose.connect(MONGO_URI, {
+    dbName: 'Productos',
+    tls: true,
+    tlsAllowInvalidCertificates: true,
+    connectTimeoutMS: 10000,
+    serverSelectionTimeoutMS: 10000
+  })
+  .then(() => console.log('✅ Conectado exitosamente a la BD "Productos" en Azure'))
+  .catch(err => console.error('❌ Error de conexión:', err.message));
 } else {
-  console.error('CRÍTICO: MONGODB_URI no existe en variables de entorno');
+  console.error('CRÍTICO: No se encontró MONGODB_URI en las variables de entorno');
 }
 
 // ------------------------------------------------------------------
@@ -39,36 +45,38 @@ const Producto = mongoose.model('Producto', ProductoSchema);
 const Usuario = mongoose.model('Usuario', UsuarioSchema);
 
 // ------------------------------------------------------------------
-// API ENDPOINTS - PRODUCTOS
+// ENDPOINTS API - PRODUCTOS
 // ------------------------------------------------------------------
 app.get('/api/productos', async (req, res) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ error: 'Conectando a la base de datos... Reintenta en unos segundos.' });
-    }
     const productos = await Producto.find();
     res.json(productos);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error GET /api/productos:', err);
+    res.status(500).json({ error: 'Error al consultar la BD: ' + err.message });
   }
 });
 
 app.post('/api/productos', async (req, res) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ error: 'La base de datos aún no está lista o rechazó la conexión de Azure.' });
-    }
     const { nombre, categoria, precio, stock } = req.body;
-    const nuevo = new Producto({
+    
+    if (!nombre || !categoria || precio === undefined || stock === undefined) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    }
+
+    const nuevoProducto = new Producto({
       nombre,
       categoria,
       precio: Number(precio),
       stock: Number(stock)
     });
-    const guardado = await nuevo.save();
+
+    const guardado = await nuevoProducto.save();
     res.status(201).json(guardado);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('Error POST /api/productos:', err);
+    res.status(400).json({ error: 'Error al guardar: ' + err.message });
   }
 });
 
@@ -91,13 +99,10 @@ app.delete('/api/productos/:id', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// API ENDPOINTS - USUARIOS
+// ENDPOINTS API - USUARIOS
 // ------------------------------------------------------------------
 app.get('/api/usuarios', async (req, res) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ error: 'Base de datos desconectada' });
-    }
     const usuarios = await Usuario.find();
     res.json(usuarios);
   } catch (err) {
@@ -107,11 +112,8 @@ app.get('/api/usuarios', async (req, res) => {
 
 app.post('/api/usuarios', async (req, res) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ error: 'Base de datos desconectada' });
-    }
-    const nuevo = new Usuario(req.body);
-    const guardado = await nuevo.save();
+    const nuevoUsuario = new Usuario(req.body);
+    const guardado = await nuevoUsuario.save();
     res.status(201).json(guardado);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -127,7 +129,7 @@ app.delete('/api/usuarios/:id', async (req, res) => {
   }
 });
 
-// Servir la página principal si no coincide ninguna ruta API
+// Servir la página principal por defecto
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
