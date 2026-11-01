@@ -77,7 +77,6 @@
       <a href="productos.html">Catálogo</a>
       <a href="gestion.html">Gestión (CRUD)</a>
       <a href="usuarios.html" class="active">Usuarios</a>
-      <a href="login.html" style="color: var(--accent-neon-purple);">Login</a>
     </nav>
   </header>
 
@@ -88,8 +87,20 @@
       <form id="user-form">
         <div class="form-grid">
           <div class="input-group">
-            <label>Nombre Completo</label>
-            <input type="text" id="u-nombre" placeholder="Ej. Alex Ramírez" required>
+            <label>Nombre(s)</label>
+            <input type="text" id="u-nombre" placeholder="Ej. Alex" required>
+          </div>
+          <div class="input-group">
+            <label>Apellido Paterno</label>
+            <input type="text" id="u-appaterno" placeholder="Ej. Ramírez" required>
+          </div>
+          <div class="input-group">
+            <label>Apellido Materno</label>
+            <input type="text" id="u-apmaterno" placeholder="Ej. Gómez">
+          </div>
+          <div class="input-group">
+            <label>Nombre de Usuario (Login)</label>
+            <input type="text" id="u-usuario" placeholder="Ej. aramirez" required>
           </div>
           <div class="input-group">
             <label>Correo Electrónico</label>
@@ -134,11 +145,10 @@
     <table>
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Nombre</th>
+          <th>Usuario</th>
+          <th>Nombre Completo</th>
           <th>Correo</th>
           <th>Teléfono</th>
-          <th>RFC/CURP</th>
           <th>Rol</th>
           <th>Estado</th>
           <th>Acciones</th>
@@ -160,19 +170,19 @@
       tbody.innerHTML = '';
 
       if (!Array.isArray(usuarios) || usuarios.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">Sin usuarios registrados en la base de datos</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Sin usuarios registrados en la base de datos</td></tr>';
         return;
       }
 
       usuarios.forEach(u => {
+        const nombreCompleto = `${u.nombre || ''} ${u.apPaterno || ''} ${u.apMaterno || ''}`.trim();
         tbody.innerHTML += `
           <tr>
-            <td>#USR-${u._id ? u._id.substring(u._id.length - 4) : 'N/A'}</td>
-            <td>${u.nombre}</td>
+            <td><strong style="color: var(--accent-neon-purple);">${u.usuario || 'N/A'}</strong></td>
+            <td>${nombreCompleto}</td>
             <td>${u.correo}</td>
             <td>${u.telefono || 'N/A'}</td>
-            <td>${u.identificacion || 'N/A'}</td>
-            <td><span style="color: var(--accent-neon-purple); font-weight: bold;">${u.rol}</span></td>
+            <td>${u.rol}</td>
             <td><span class="${u.estado === 'Inactivo' ? 'badge-inactive' : 'badge-active'}">${u.estado || 'Activo'}</span></td>
             <td>
               <button class="btn btn-danger" onclick="eliminarUsuario('${u._id}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Eliminar</button>
@@ -193,6 +203,9 @@
 
     const data = {
       nombre: document.getElementById('u-nombre').value,
+      apPaterno: document.getElementById('u-appaterno').value,
+      apMaterno: document.getElementById('u-apmaterno').value,
+      usuario: document.getElementById('u-usuario').value,
       correo: document.getElementById('u-correo').value,
       telefono: document.getElementById('u-telefono').value,
       identificacion: document.getElementById('u-identificacion').value,
