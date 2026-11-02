@@ -68,7 +68,9 @@ async function asegurarConexion(req, res, next) {
   }
 }
 
-// API PRODUCTOS
+// ------------------------------------------------------------------
+// API PRODUCTOS (CRUD COMPLETO)
+// ------------------------------------------------------------------
 app.get('/api/productos', asegurarConexion, async (req, res) => {
   try {
     const productos = await Producto.find();
@@ -106,7 +108,9 @@ app.delete('/api/productos/:id', asegurarConexion, async (req, res) => {
   }
 });
 
-// API USUARIOS
+// ------------------------------------------------------------------
+// API USUARIOS (CRUD COMPLETO Y LOGIN)
+// ------------------------------------------------------------------
 app.get('/api/usuarios', asegurarConexion, async (req, res) => {
   try {
     const usuarios = await Usuario.find();
@@ -126,6 +130,20 @@ app.post('/api/usuarios', asegurarConexion, async (req, res) => {
   }
 });
 
+// Modificar usuario por ID (PUT)
+app.put('/api/usuarios/:id', asegurarConexion, async (req, res) => {
+  try {
+    // Si en la edición no enviaron una nueva contraseña, evitamos borrar la existente
+    if (!req.body.password) {
+      delete req.body.password;
+    }
+    const actualizado = await Usuario.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(actualizado);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 app.delete('/api/usuarios/:id', asegurarConexion, async (req, res) => {
   try {
     await Usuario.findByIdAndDelete(req.params.id);
@@ -135,6 +153,26 @@ app.delete('/api/usuarios/:id', asegurarConexion, async (req, res) => {
   }
 });
 
+// Endpoint de Login
+app.post('/api/login', asegurarConexion, async (req, res) => {
+  const { usuario, password } = req.body;
+  try {
+    const user = await Usuario.findOne({ usuario, password });
+    if (!user) {
+      return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+    }
+    if (user.estado === 'Inactivo') {
+      return res.status(403).json({ error: 'El usuario se encuentra inactivo' });
+    }
+    res.json({ mensaje: 'Acceso concedido', usuario: user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ------------------------------------------------------------------
+// RUTAS DE MANEJO DE VISTAS (FALLBACK)
+// ------------------------------------------------------------------
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
