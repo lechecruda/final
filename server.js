@@ -173,8 +173,14 @@ app.post('/api/login', asegurarConexion, async (req, res) => {
 // ------------------------------------------------------------------
 // RUTAS DE MANEJO DE VISTAS (FALLBACK)
 // ------------------------------------------------------------------
+// Sirve la pantalla de login por defecto al entrar a la raíz
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+// Cualquier otra ruta no capturada envía a login.html o index.html según necesites
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'login.html'));
 });
 
 app.listen(PORT, () => {
