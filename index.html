@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GamerVault - Dashboard</title>
+
+  <!-- REDIRECCIÓN OBLIGATORIA: Si no hay sesión iniciada, salta al login inmediatamente -->
+  <script>
+    if (!localStorage.getItem('usuarioSesion')) {
+      window.location.href = 'login.html';
+    }
+  </script>
+
   <style>
     :root {
       --bg-dark: #0a0814;
@@ -17,28 +25,59 @@
       --danger: #f43f5e;
       --success: #10b981;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
-    header { background-color: var(--card-bg); border-bottom: 2px solid var(--accent-glow); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 0 15px rgba(168, 85, 247, 0.2); }
+    
+    header { 
+      background-color: var(--card-bg); 
+      border-bottom: 2px solid var(--accent-glow); 
+      padding: 1rem 2rem; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.2); 
+    }
+
     .logo { color: var(--accent-neon-purple); font-size: 1.5rem; text-transform: uppercase; font-weight: bold; letter-spacing: 2px; }
-    nav a { color: var(--text-muted); text-decoration: none; margin-left: 1.5rem; font-weight: 600; transition: color 0.3s; }
+    
+    nav { display: flex; align-items: center; gap: 1.5rem; }
+    nav a { color: var(--text-muted); text-decoration: none; font-weight: 600; transition: color 0.3s; }
     nav a:hover, nav a.active { color: var(--accent-neon-purple); text-shadow: 0 0 8px var(--accent-glow); }
+
+    .btn-logout { 
+      color: var(--danger); 
+      border: 1px solid var(--danger); 
+      background: transparent;
+      padding: 0.4rem 0.9rem; 
+      border-radius: 4px; 
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { background-color: var(--danger); color: white; }
+
     .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; width: 100%; display: flex; flex-direction: column; gap: 2rem; }
     .hero { text-align: center; padding: 2.5rem 1rem; background: radial-gradient(circle, rgba(147, 51, 234, 0.15) 0%, rgba(10, 8, 20, 1) 75%); border-radius: 12px; border: 1px solid var(--border-color); }
     .hero h1 { font-size: 2.2rem; color: var(--accent-neon-purple); margin-bottom: 0.5rem; }
     .hero p { color: var(--text-muted); font-size: 1rem; }
+    
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
     .stat-card { background-color: var(--card-bg); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 10px; text-align: center; transition: transform 0.2s, border-color 0.2s; }
     .stat-card:hover { transform: translateY(-4px); border-color: var(--accent-purple); box-shadow: 0 4px 20px rgba(168, 85, 247, 0.2); }
     .stat-card h3 { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; }
     .stat-card .number { font-size: 2rem; font-weight: bold; color: var(--accent-neon-purple); margin-top: 0.5rem; }
+    
     .quick-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
     .btn-action { background-color: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.8rem 1.2rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
     .btn-action:hover { border-color: var(--accent-purple); background-color: var(--border-color); color: var(--accent-neon-purple); }
+    
     .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
     @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
+    
     .panel { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.5rem; }
     .panel h2 { font-size: 1.1rem; color: var(--accent-neon-purple); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+    
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border-color); text-align: left; font-size: 0.9rem; }
     th { color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; }
@@ -53,13 +92,14 @@
       <a href="productos.html">Catálogo</a>
       <a href="gestion.html">Gestión (CRUD)</a>
       <a href="usuarios.html">Usuarios</a>
+      <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
     </nav>
   </header>
 
   <div class="container">
     <div class="hero">
       <h1>Panel de Control GamerVault</h1>
-      <p>Gestión integral de inventario, stock crítico y control de almacén</p>
+      <p id="user-welcome">Gestión integral de inventario, stock crítico y control de almacén</p>
     </div>
 
     <div class="stats-grid">
@@ -107,7 +147,21 @@
   </div>
 
 <script>
+  function cerrarSesion() {
+    localStorage.removeItem('usuarioSesion');
+    window.location.href = 'login.html';
+  }
+
   async function cargarDashboard() {
+    // Mostrar saludo personalizado al usuario autenticado
+    const sesionRaw = localStorage.getItem('usuarioSesion');
+    if (sesionRaw) {
+      try {
+        const user = JSON.parse(sesionRaw);
+        document.getElementById('user-welcome').textContent = `Bienvenido(a), ${user.nombre || user.usuario} | Rol: ${user.rol || 'Usuario'}`;
+      } catch(e) {}
+    }
+
     try {
       const resP = await fetch('/api/productos');
       const productos = await resP.json();
