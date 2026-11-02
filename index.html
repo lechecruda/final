@@ -72,11 +72,28 @@
     .btn-action { background-color: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.8rem 1.2rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
     .btn-action:hover { border-color: var(--accent-purple); background-color: var(--border-color); color: var(--accent-neon-purple); }
     
-    .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
-    @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
+.dashboard-grid { 
+      display: flex; 
+      flex-direction: column; 
+      width: 100%; 
+    }
     
-    .panel { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.5rem; }
-    .panel h2 { font-size: 1.1rem; color: var(--accent-neon-purple); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+    .panel { 
+      background-color: var(--card-bg); 
+      border: 1px solid var(--border-color); 
+      border-radius: 10px; 
+      padding: 1.5rem; 
+      width: 100%; 
+    }
+    
+    .panel h2 { 
+      font-size: 1.1rem; 
+      color: var(--accent-neon-purple); 
+      margin-bottom: 1rem; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+    }
     
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border-color); text-align: left; font-size: 0.9rem; }
