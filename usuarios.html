@@ -77,12 +77,13 @@
       <a href="productos.html">Catálogo</a>
       <a href="gestion.html">Gestión (CRUD)</a>
       <a href="usuarios.html" class="active">Usuarios</a>
+      <a href="login.html" style="color: var(--accent-neon-purple); border: 1px solid var(--accent-purple); padding: 0.3rem 0.8rem; border-radius: 4px;">Login</a>
     </nav>
   </header>
 
   <div class="container">
     <div class="form-card">
-      <h2>Control y Edición de Usuarios</h2>
+      <h2 id="form-title">Control y Edición de Usuarios</h2>
       <br>
       <form id="user-form">
         <input type="hidden" id="u-id">
@@ -120,15 +121,15 @@
             <input type="text" id="u-direccion" placeholder="Av. Principal #123">
           </div>
           <div class="input-group">
-            <label>Contraseña (dejar vacío si no se desea modificar)</label>
+            <label>Contraseña (Dejar vacío para conservar la actual al editar)</label>
             <input type="password" id="u-password" placeholder="••••••••">
           </div>
           <div class="input-group">
             <label>Rol de Usuario</label>
             <select id="u-rol" required>
               <option value="Administrador">Administrador</option>
-              <option value="Operador">Operador de Almacén</option>
-              <option value="Consulta">Solo Lectura</option>
+              <option value="Operador de Almacén">Operador de Almacén</option>
+              <option value="Solo Lectura">Solo Lectura</option>
             </select>
           </div>
           <div class="input-group">
@@ -139,7 +140,10 @@
             </select>
           </div>
         </div>
-        <button type="submit" id="btn-user-submit" class="btn btn-primary">Guardar Registro</button>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <button type="submit" id="btn-user-submit" class="btn btn-primary">Guardar Registro</button>
+          <button type="button" id="btn-cancel" class="btn" style="background-color: #4b5563; color: white; margin-top: 1rem; display: none;" onclick="limpiarFormulario()">Cancelar Edición</button>
+        </div>
       </form>
     </div>
 
@@ -162,11 +166,13 @@
 
 <script>
   const API_USERS = '/api/usuarios';
+  let listaUsuariosCache = [];
 
   async function cargarUsuarios() {
     try {
       const res = await fetch(API_USERS);
       const usuarios = await res.json();
+      listaUsuariosCache = usuarios;
       const tbody = document.getElementById('usuarios-tbody');
       tbody.innerHTML = '';
 
@@ -176,17 +182,22 @@
       }
 
       usuarios.forEach(u => {
-        const nombreCompleto = `${u.nombre || ''} ${u.apPaterno || ''} ${u.apMaterno || ''}`.trim();
+        const nom = u.nombre || '';
+        const pat = u.apPaterno || '';
+        const mat = u.apMaterno || '';
+        const nombreCompleto = `${nom} ${pat} ${mat}`.trim() || 'Sin Nombre';
+        const usuarioNick = u.usuario || 'N/A';
+
         tbody.innerHTML += `
           <tr>
-            <td><strong style="color: var(--accent-neon-purple);">${u.usuario || 'N/A'}</strong></td>
+            <td><strong style="color: var(--accent-neon-purple);">${usuarioNick}</strong></td>
             <td>${nombreCompleto}</td>
-            <td>${u.correo}</td>
+            <td>${u.correo || 'N/A'}</td>
             <td>${u.telefono || 'N/A'}</td>
-            <td>${u.rol}</td>
+            <td>${u.rol || 'Solo Lectura'}</td>
             <td><span class="${u.estado === 'Inactivo' ? 'badge-inactive' : 'badge-active'}">${u.estado || 'Activo'}</span></td>
             <td>
-              <button class="btn btn-primary" onclick="editarUsuario('${u._id}', '${u.nombre}', '${u.apPaterno}', '${u.apMaterno}', '${u.usuario}', '${u.correo}', '${u.telefono}', '${u.identificacion}', '${u.direccion}', '${u.rol}', '${u.estado}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Editar</button>
+              <button class="btn btn-primary" onclick="prepararEdicion('${u._id}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Editar</button>
               <button class="btn btn-danger" onclick="eliminarUsuario('${u._id}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Eliminar</button>
             </td>
           </tr>
@@ -197,6 +208,41 @@
     }
   }
 
+  function prepararEdicion(id) {
+    const u = listaUsuariosCache.find(user => user._id === id);
+    if (!u) return;
+
+    document.getElementById('u-id').value = u._id;
+    document.getElementById('u-nombre').value = u.nombre || '';
+    document.getElementById('u-appaterno').value = u.apPaterno || '';
+    document.getElementById('u-apmaterno').value = u.apMaterno || '';
+    document.getElementById('u-usuario').value = u.usuario || '';
+    document.getElementById('u-correo').value = u.correo || '';
+    document.getElementById('u-telefono').value = u.telefono || '';
+    document.getElementById('u-identificacion').value = u.identificacion || '';
+    document.getElementById('u-direccion').value = u.direccion || '';
+    document.getElementById('u-rol').value = u.rol || 'Administrador';
+    document.getElementById('u-estado').value = u.estado || 'Activo';
+    
+    // Al editar, la contraseña no es requerida en el HTML si no se quiere cambiar
+    const passInput = document.getElementById('u-password');
+    passInput.value = '';
+    passInput.removeAttribute('required');
+
+    document.getElementById('form-title').textContent = 'Modificar Usuario';
+    document.getElementById('btn-user-submit').textContent = 'Actualizar Usuario';
+    document.getElementById('btn-cancel').style.display = 'inline-block';
+  }
+
+  function limpiarFormulario() {
+    document.getElementById('user-form').reset();
+    document.getElementById('u-id').value = '';
+    document.getElementById('u-password').setAttribute('required', 'true');
+    document.getElementById('form-title').textContent = 'Control y Edición de Usuarios';
+    document.getElementById('btn-user-submit').textContent = 'Guardar Registro';
+    document.getElementById('btn-cancel').style.display = 'none';
+  }
+
   document.getElementById('user-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-user-submit');
@@ -205,21 +251,21 @@
 
     const id = document.getElementById('u-id').value;
     const data = {
-      nombre: document.getElementById('u-nombre').value,
-      apPaterno: document.getElementById('u-appaterno').value,
-      apMaterno: document.getElementById('u-apmaterno').value,
-      usuario: document.getElementById('u-usuario').value,
-      correo: document.getElementById('u-correo').value,
-      telefono: document.getElementById('u-telefono').value,
-      identificacion: document.getElementById('u-identificacion').value,
-      direccion: document.getElementById('u-direccion').value,
+      nombre: document.getElementById('u-nombre').value.trim(),
+      apPaterno: document.getElementById('u-appaterno').value.trim(),
+      apMaterno: document.getElementById('u-apmaterno').value.trim(),
+      usuario: document.getElementById('u-usuario').value.trim(),
+      correo: document.getElementById('u-correo').value.trim(),
+      telefono: document.getElementById('u-telefono').value.trim(),
+      identificacion: document.getElementById('u-identificacion').value.trim(),
+      direccion: document.getElementById('u-direccion').value.trim(),
       rol: document.getElementById('u-rol').value,
       estado: document.getElementById('u-estado').value
     };
 
-    const passwordInput = document.getElementById('u-password').value;
-    if (passwordInput || !id) {
-      data.password = passwordInput;
+    const pwd = document.getElementById('u-password').value;
+    if (pwd) {
+      data.password = pwd;
     }
 
     try {
@@ -229,41 +275,36 @@
         body: JSON.stringify(data)
       });
 
-      if (!res.ok) throw new Error('Error al guardar usuario');
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || 'Error en la petición al servidor');
+      }
 
-      document.getElementById('user-form').reset();
-      document.getElementById('u-id').value = '';
+      limpiarFormulario();
       await cargarUsuarios();
     } catch (err) {
       alert('Error: ' + err.message);
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Guardar Registro';
+      if (!document.getElementById('u-id').value) {
+        btn.textContent = 'Guardar Registro';
+      } else {
+        btn.textContent = 'Actualizar Usuario';
+      }
     }
   });
-
-  function editarUsuario(id, nombre, apPaterno, apMaterno, usuario, correo, telefono, identificacion, direccion, rol, estado) {
-    document.getElementById('u-id').value = id;
-    document.getElementById('u-nombre').value = nombre;
-    document.getElementById('u-appaterno').value = apPaterno;
-    document.getElementById('u-apmaterno').value = apMaterno;
-    document.getElementById('u-usuario').value = usuario;
-    document.getElementById('u-correo').value = correo;
-    document.getElementById('u-telefono').value = telefono;
-    document.getElementById('u-identificacion').value = identificacion;
-    document.getElementById('u-direccion').value = direccion;
-    document.getElementById('u-rol').value = rol;
-    document.getElementById('u-estado').value = estado;
-    document.getElementById('u-password').value = ''; 
-  }
 
   async function eliminarUsuario(id) {
     if (confirm('¿Eliminar este usuario de la base de datos?')) {
       try {
-        await fetch(`${API_USERS}/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_USERS}/${id}`, { method: 'DELETE' });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'No se pudo eliminar');
+        }
         cargarUsuarios();
       } catch (err) {
-        console.error('Error al eliminar usuario:', err);
+        alert('Error al eliminar: ' + err.message);
       }
     }
   }
