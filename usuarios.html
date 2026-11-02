@@ -82,9 +82,10 @@
 
   <div class="container">
     <div class="form-card">
-      <h2>Control de Usuarios y Permisos</h2>
+      <h2>Control y Edición de Usuarios</h2>
       <br>
       <form id="user-form">
+        <input type="hidden" id="u-id">
         <div class="form-grid">
           <div class="input-group">
             <label>Nombre(s)</label>
@@ -119,8 +120,8 @@
             <input type="text" id="u-direccion" placeholder="Av. Principal #123">
           </div>
           <div class="input-group">
-            <label>Contraseña</label>
-            <input type="password" id="u-password" placeholder="••••••••" required>
+            <label>Contraseña (dejar vacío si no se desea modificar)</label>
+            <input type="password" id="u-password" placeholder="••••••••">
           </div>
           <div class="input-group">
             <label>Rol de Usuario</label>
@@ -138,7 +139,7 @@
             </select>
           </div>
         </div>
-        <button type="submit" id="btn-user-submit" class="btn btn-primary">Registrar Usuario</button>
+        <button type="submit" id="btn-user-submit" class="btn btn-primary">Guardar Registro</button>
       </form>
     </div>
 
@@ -185,6 +186,7 @@
             <td>${u.rol}</td>
             <td><span class="${u.estado === 'Inactivo' ? 'badge-inactive' : 'badge-active'}">${u.estado || 'Activo'}</span></td>
             <td>
+              <button class="btn btn-primary" onclick="editarUsuario('${u._id}', '${u.nombre}', '${u.apPaterno}', '${u.apMaterno}', '${u.usuario}', '${u.correo}', '${u.telefono}', '${u.identificacion}', '${u.direccion}', '${u.rol}', '${u.estado}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Editar</button>
               <button class="btn btn-danger" onclick="eliminarUsuario('${u._id}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Eliminar</button>
             </td>
           </tr>
@@ -201,6 +203,7 @@
     btn.disabled = true;
     btn.textContent = 'Guardando...';
 
+    const id = document.getElementById('u-id').value;
     const data = {
       nombre: document.getElementById('u-nombre').value,
       apPaterno: document.getElementById('u-appaterno').value,
@@ -210,29 +213,49 @@
       telefono: document.getElementById('u-telefono').value,
       identificacion: document.getElementById('u-identificacion').value,
       direccion: document.getElementById('u-direccion').value,
-      password: document.getElementById('u-password').value,
       rol: document.getElementById('u-rol').value,
       estado: document.getElementById('u-estado').value
     };
 
+    const passwordInput = document.getElementById('u-password').value;
+    if (passwordInput || !id) {
+      data.password = passwordInput;
+    }
+
     try {
-      const res = await fetch(API_USERS, {
-        method: 'POST',
+      const res = await fetch(id ? `${API_USERS}/${id}` : API_USERS, {
+        method: id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
 
-      if (!res.ok) throw new Error('Error al registrar usuario');
+      if (!res.ok) throw new Error('Error al guardar usuario');
 
       document.getElementById('user-form').reset();
+      document.getElementById('u-id').value = '';
       await cargarUsuarios();
     } catch (err) {
-      alert('Error al guardar el usuario: ' + err.message);
+      alert('Error: ' + err.message);
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Registrar Usuario';
+      btn.textContent = 'Guardar Registro';
     }
   });
+
+  function editarUsuario(id, nombre, apPaterno, apMaterno, usuario, correo, telefono, identificacion, direccion, rol, estado) {
+    document.getElementById('u-id').value = id;
+    document.getElementById('u-nombre').value = nombre;
+    document.getElementById('u-appaterno').value = apPaterno;
+    document.getElementById('u-apmaterno').value = apMaterno;
+    document.getElementById('u-usuario').value = usuario;
+    document.getElementById('u-correo').value = correo;
+    document.getElementById('u-telefono').value = telefono;
+    document.getElementById('u-identificacion').value = identificacion;
+    document.getElementById('u-direccion').value = direccion;
+    document.getElementById('u-rol').value = rol;
+    document.getElementById('u-estado').value = estado;
+    document.getElementById('u-password').value = ''; 
+  }
 
   async function eliminarUsuario(id) {
     if (confirm('¿Eliminar este usuario de la base de datos?')) {
