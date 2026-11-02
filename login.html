@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GamerVault - Iniciar Sesión</title>
+  <style>
+    :root {
+      --bg-dark: #0a0814;
+      --card-bg: #15102a;
+      --border-color: #2e2055;
+      --accent-purple: #a855f7;
+      --accent-neon-purple: #d8b4fe;
+      --accent-glow: #9333ea;
+      --text-main: #f3e8ff;
+      --text-muted: #a78bfa;
+      --danger: #f43f5e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+
+    .login-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 0 20px rgba(147, 51, 234, 0.2);
+    }
+
+    .logo { color: var(--accent-neon-purple); font-size: 1.8rem; text-transform: uppercase; font-weight: bold; text-align: center; margin-bottom: 1.5rem; }
+    .input-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.2rem; }
+    .input-group label { font-size: 0.85rem; color: var(--text-muted); }
+    .input-group input {
+      background-color: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.8rem;
+      border-radius: 6px;
+      outline: none;
+    }
+    .input-group input:focus { border-color: var(--accent-purple); }
+
+    .btn { width: 100%; padding: 0.8rem; border: none; border-radius: 6px; background-color: var(--accent-purple); color: white; font-weight: bold; cursor: pointer; font-size: 0.9rem; text-transform: uppercase; }
+    .error-msg { color: var(--danger); font-size: 0.85rem; text-align: center; margin-top: 1rem; display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <div class="logo">🎮 GamerVault</div>
+    <form id="login-form">
+      <div class="input-group">
+        <label>Nombre de Usuario</label>
+        <input type="text" id="l-usuario" placeholder="Ingresa tu usuario" required>
+      </div>
+      <div class="input-group">
+        <label>Contraseña</label>
+        <input type="password" id="l-password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn">Ingresar al Sistema</button>
+      <div id="error-box" class="error-msg"></div>
+    </form>
+  </div>
+
+<script>
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById('error-box');
+    errorBox.style.display = 'none';
+
+    const usuario = document.getElementById('l-usuario').value;
+    const password = document.getElementById('l-password').value;
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario, password })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Acceso denegado');
+
+      // Guardar información del usuario autenticado en localStorage
+      localStorage.setItem('usuarioSesion', JSON.stringify(data.usuario));
+      window.location.href = 'index.html';
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.style.display = 'block';
+    }
+  });
+</script>
+</body>
+</html>
