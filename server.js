@@ -53,7 +53,6 @@ const UsuarioSchema = new mongoose.Schema({
   identificacion: { type: String, default: '' },
   direccion: { type: String, default: '' },
   password: { type: String, required: true },
-  rol: { type: String, required: true },
   estado: { type: String, default: 'Activo' }
 }, { collection: 'usuarios', timestamps: true });
 
