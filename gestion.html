@@ -28,13 +28,13 @@
       justify-content: space-between;
       align-items: center;
     }
-
     .logo { color: var(--accent-neon-purple); font-size: 1.5rem; text-transform: uppercase; font-weight: bold; }
     nav a { color: var(--text-muted); text-decoration: none; margin-left: 1.5rem; font-weight: 600; }
     nav a:hover, nav a.active { color: var(--accent-neon-purple); text-shadow: 0 0 8px var(--accent-glow); }
 
     .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; width: 100%; }
 
+    /* TARJETA DEL FORMULARIO */
     .form-card {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -56,10 +56,12 @@
       outline: none;
     }
 
+    /* BOTONES */
     .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.8rem; }
     .btn-primary { background-color: var(--accent-purple); color: white; margin-top: 1rem; }
     .btn-danger { background-color: var(--danger); color: white; }
 
+    /* TABLA DE PRODUCTOS */
     table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); border-radius: 8px; overflow: hidden; }
     th, td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border-color); text-align: left; }
     th { background-color: #0d0a1d; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; }
@@ -67,6 +69,7 @@
 </head>
 <body>
 
+  <!-- NAVEGACIÓN -->
   <header>
     <div class="logo">🎮 GamerVault</div>
     <nav>
@@ -78,26 +81,28 @@
   </header>
 
   <div class="container">
+    <!-- FORMULARIO DE ALTA Y EDICIÓN -->
     <div class="form-card">
-      <h2>Registrar / Modificar Producto</h2>
+      <h2 id="form-title">Registrar / Modificar Producto</h2>
       <br>
       <form id="crud-form">
+        <!-- Campo oculto para almacenar la ID cuando se está editando -->
         <input type="hidden" id="prod-id">
         <div class="form-grid">
           <div class="input-group">
-            <label>Código SKU / Barras</label>
+            <label for="p-sku">Código SKU / Barras</label>
             <input type="text" id="p-sku" placeholder="SKU-8849" required>
           </div>
           <div class="input-group">
-            <label>Nombre del Producto</label>
+            <label for="p-nombre">Nombre del Producto</label>
             <input type="text" id="p-nombre" placeholder="Ej. Mouse Gamer 16k DPI" required>
           </div>
           <div class="input-group">
-            <label>Marca</label>
+            <label for="p-marca">Marca</label>
             <input type="text" id="p-marca" placeholder="Logitech / Corsair">
           </div>
           <div class="input-group">
-            <label>Categoría</label>
+            <label for="p-categoria">Categoría</label>
             <select id="p-categoria" required>
               <option value="Periféricos">Periféricos</option>
               <option value="Componentes">Componentes</option>
@@ -106,23 +111,23 @@
             </select>
           </div>
           <div class="input-group">
-            <label>Precio ($)</label>
+            <label for="p-precio">Precio ($)</label>
             <input type="number" step="0.01" id="p-precio" placeholder="0.00" required>
           </div>
           <div class="input-group">
-            <label>Stock</label>
+            <label for="p-stock">Stock</label>
             <input type="number" id="p-stock" placeholder="0" required>
           </div>
           <div class="input-group">
-            <label>Proveedor</label>
+            <label for="p-proveedor">Proveedor</label>
             <input type="text" id="p-proveedor" placeholder="Asus México">
           </div>
           <div class="input-group">
-            <label>Ubicación Almacén</label>
+            <label for="p-ubicacion">Ubicación Almacén</label>
             <input type="text" id="p-ubicacion" placeholder="Estante A-2">
           </div>
           <div class="input-group full-width">
-            <label>Descripción detallada</label>
+            <label for="p-descripcion">Descripción detallada</label>
             <textarea id="p-descripcion" rows="2" placeholder="Especificaciones técnicas..."></textarea>
           </div>
         </div>
@@ -130,6 +135,7 @@
       </form>
     </div>
 
+    <!-- TABLA QUE ENLISTA LOS PRODUCTOS -->
     <table>
       <thead>
         <tr>
@@ -143,48 +149,67 @@
           <th>Acciones</th>
         </tr>
       </thead>
-      <tbody id="tabla-body">
-      </tbody>
+      <tbody id="tabla-body"></tbody>
     </table>
   </div>
 
 <script>
   const API_URL = '/api/productos';
+  let productosCache = [];
 
+  // OBTENER Y LISTAR PRODUCTOS EN LA TABLA
   async function cargarProductos() {
     try {
       const res = await fetch(API_URL);
       const productos = await res.json();
+      productosCache = productos; // Guardar copia para edición más limpia
       const tbody = document.getElementById('tabla-body');
-      tbody.innerHTML = '';
 
       if (!Array.isArray(productos) || productos.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">Sin productos en la base de datos</td></tr>';
         return;
       }
 
-      productos.forEach(p => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${p.sku || '#N/A'}</td>
-            <td>${p.nombre}</td>
-            <td>${p.marca || 'Generico'}</td>
-            <td>${p.categoria}</td>
-            <td>$${Number(p.precio).toFixed(2)}</td>
-            <td>${p.stock}</td>
-            <td>${p.ubicacion || 'General'}</td>
-            <td>
-              <button class="btn btn-primary" onclick="editar('${p._id}', '${p.sku}', '${p.nombre}', '${p.marca}', '${p.categoria}', ${p.precio}, ${p.stock}, '${p.proveedor}', '${p.ubicacion}', '${p.descripcion}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Editar</button>
-              <button class="btn btn-danger" onclick="eliminar('${p._id}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Baja</button>
-            </td>
-          </tr>
-        `;
-      });
+      tbody.innerHTML = productos.map(p => `
+        <tr>
+          <td>${p.sku || '#N/A'}</td>
+          <td>${p.nombre}</td>
+          <td>${p.marca || 'Genérico'}</td>
+          <td>${p.categoria}</td>
+          <td>$${Number(p.precio).toFixed(2)}</td>
+          <td>${p.stock}</td>
+          <td>${p.ubicacion || 'General'}</td>
+          <td>
+            <button class="btn btn-primary" onclick="editar('${p._id}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Editar</button>
+            <button class="btn btn-danger" onclick="eliminar('${p._id}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Baja</button>
+          </td>
+        </tr>
+      `).join('');
     } catch (err) {
       console.error('Error al cargar productos:', err);
     }
   }
 
+  // LLENAR FORMULARIO CON DATOS DEL PRODUCTO A EDITAR
+  function editar(id) {
+    const p = productosCache.find(prod => prod._id === id);
+    if (!p) return;
+
+    document.getElementById('prod-id').value = p._id;
+    document.getElementById('p-sku').value = p.sku || '';
+    document.getElementById('p-nombre').value = p.nombre || '';
+    document.getElementById('p-marca').value = p.marca || '';
+    document.getElementById('p-categoria').value = p.categoria || 'Periféricos';
+    document.getElementById('p-precio').value = p.precio || '';
+    document.getElementById('p-stock').value = p.stock || '';
+    document.getElementById('p-proveedor').value = p.proveedor || '';
+    document.getElementById('p-ubicacion').value = p.ubicacion || '';
+    document.getElementById('p-descripcion').value = p.descripcion || '';
+    
+    document.getElementById('btn-submit').textContent = 'Actualizar Producto';
+  }
+
+  // ENVÍO DE DATOS (CREAR O ACTUALIZAR SEGUNDO SI HAY ID)
   document.getElementById('crud-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
@@ -193,15 +218,15 @@
 
     const id = document.getElementById('prod-id').value;
     const data = {
-      sku: document.getElementById('p-sku').value,
-      nombre: document.getElementById('p-nombre').value,
-      marca: document.getElementById('p-marca').value,
+      sku: document.getElementById('p-sku').value.trim(),
+      nombre: document.getElementById('p-nombre').value.trim(),
+      marca: document.getElementById('p-marca').value.trim(),
       categoria: document.getElementById('p-categoria').value,
       precio: parseFloat(document.getElementById('p-precio').value),
       stock: parseInt(document.getElementById('p-stock').value),
-      proveedor: document.getElementById('p-proveedor').value,
-      ubicacion: document.getElementById('p-ubicacion').value,
-      descripcion: document.getElementById('p-descripcion').value
+      proveedor: document.getElementById('p-proveedor').value.trim(),
+      ubicacion: document.getElementById('p-ubicacion').value.trim(),
+      descripcion: document.getElementById('p-descripcion').value.trim()
     };
 
     try {
@@ -214,37 +239,27 @@
       const resData = await res.json();
       if (!res.ok) throw new Error(resData.error || 'Error al guardar');
 
+      // Limpieza y reinicio del formulario
       document.getElementById('crud-form').reset();
       document.getElementById('prod-id').value = '';
+      btn.textContent = 'Guardar Registro';
       await cargarProductos();
     } catch (err) {
       alert('Error: ' + err.message);
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Guardar Registro';
     }
   });
 
-  function editar(id, sku, nombre, marca, categoria, precio, stock, proveedor, ubicacion, descripcion) {
-    document.getElementById('prod-id').value = id;
-    document.getElementById('p-sku').value = sku;
-    document.getElementById('p-nombre').value = nombre;
-    document.getElementById('p-marca').value = marca;
-    document.getElementById('p-categoria').value = categoria;
-    document.getElementById('p-precio').value = precio;
-    document.getElementById('p-stock').value = stock;
-    document.getElementById('p-proveedor').value = proveedor;
-    document.getElementById('p-ubicacion').value = ubicacion;
-    document.getElementById('p-descripcion').value = descripcion;
-  }
-
+  // ELIMINAR PRODUCTO (DELETE)
   async function eliminar(id) {
     if (confirm('¿Deseas dar de baja este producto?')) {
       try {
-        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('No se pudo eliminar');
         cargarProductos();
       } catch (err) {
-        console.error('Error al eliminar:', err);
+        alert('Error al eliminar: ' + err.message);
       }
     }
   }
