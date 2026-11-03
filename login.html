@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GamerVault - Iniciar Sesión</title>
   <style>
+    /* VARIABLES GLOBALES Y TEMA */
     :root {
       --bg-dark: #0a0814;
       --card-bg: #15102a;
@@ -17,9 +18,11 @@
       --danger: #f43f5e;
     }
 
+    /* ESTILOS GENERALES Y CENTRADO DEL LOGIN */
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
 
+    /* TARJETA DE LOGIN */
     .login-card {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -31,6 +34,8 @@
     }
 
     .logo { color: var(--accent-neon-purple); font-size: 1.8rem; text-transform: uppercase; font-weight: bold; text-align: center; margin-bottom: 1.5rem; }
+    
+    /* CAMPOS DE ENTRADA */
     .input-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.2rem; }
     .input-group label { font-size: 0.85rem; color: var(--text-muted); }
     .input-group input {
@@ -43,21 +48,23 @@
     }
     .input-group input:focus { border-color: var(--accent-purple); }
 
+    /* BOTÓN Y MENSAJES DE ERROR */
     .btn { width: 100%; padding: 0.8rem; border: none; border-radius: 6px; background-color: var(--accent-purple); color: white; font-weight: bold; cursor: pointer; font-size: 0.9rem; text-transform: uppercase; }
     .error-msg { color: var(--danger); font-size: 0.85rem; text-align: center; margin-top: 1rem; display: none; }
   </style>
 </head>
 <body>
 
+  <!-- CONTENEDOR PRINCIPAL DEL FORMULARIO -->
   <div class="login-card">
     <div class="logo">🎮 GamerVault</div>
     <form id="login-form">
       <div class="input-group">
-        <label>Nombre de Usuario</label>
+        <label for="l-usuario">Nombre de Usuario</label>
         <input type="text" id="l-usuario" placeholder="Ingresa tu usuario" required>
       </div>
       <div class="input-group">
-        <label>Contraseña</label>
+        <label for="l-password">Contraseña</label>
         <input type="password" id="l-password" placeholder="••••••••" required>
       </div>
       <button type="submit" class="btn">Ingresar al Sistema</button>
@@ -66,15 +73,18 @@
   </div>
 
 <script>
+  // EVENTO DE ENVÍO DEL FORMULARIO DE LOGIN
   document.getElementById('login-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Evita la recarga de página predeterminada
     const errorBox = document.getElementById('error-box');
     errorBox.style.display = 'none';
 
-    const usuario = document.getElementById('l-usuario').value;
+    // Obtener valores ingresados
+    const usuario = document.getElementById('l-usuario').value.trim();
     const password = document.getElementById('l-password').value;
 
     try {
+      // Petición al endpoint de autenticación
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -84,10 +94,11 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Acceso denegado');
 
-      // Guardar información del usuario autenticado en localStorage
+      // Guardar datos de sesión en LocalStorage y redireccionar
       localStorage.setItem('usuarioSesion', JSON.stringify(data.usuario));
       window.location.href = 'index.html';
     } catch (err) {
+      // Mostrar mensaje de error en caso de fallo
       errorBox.textContent = err.message;
       errorBox.style.display = 'block';
     }
