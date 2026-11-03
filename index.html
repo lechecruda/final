@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GamerVault - Dashboard</title>
 
-  <!-- REDIRECCIÓN OBLIGATORIA: Si no hay sesión iniciada, salta al login inmediatamente -->
+  <!-- VERIFICACIÓN DE SESIÓN (Protección de ruta frontend) -->
   <script>
     if (!localStorage.getItem('usuarioSesion')) {
       window.location.href = 'login.html';
@@ -23,12 +23,12 @@
       --text-main: #f3e8ff;
       --text-muted: #a78bfa;
       --danger: #f43f5e;
-      --success: #10b981;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
     
+    /* ENCABEZADO Y NAVEGACIÓN */
     header { 
       background-color: var(--card-bg); 
       border-bottom: 2px solid var(--accent-glow); 
@@ -38,9 +38,7 @@
       align-items: center; 
       box-shadow: 0 0 15px rgba(168, 85, 247, 0.2); 
     }
-
     .logo { color: var(--accent-neon-purple); font-size: 1.5rem; text-transform: uppercase; font-weight: bold; letter-spacing: 2px; }
-    
     nav { display: flex; align-items: center; gap: 1.5rem; }
     nav a { color: var(--text-muted); text-decoration: none; font-weight: 600; transition: color 0.3s; }
     nav a:hover, nav a.active { color: var(--accent-neon-purple); text-shadow: 0 0 8px var(--accent-glow); }
@@ -57,44 +55,28 @@
     }
     .btn-logout:hover { background-color: var(--danger); color: white; }
 
+    /* CONTENEDOR Y COMPONENTES DEL DASHBOARD */
     .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; width: 100%; display: flex; flex-direction: column; gap: 2rem; }
     .hero { text-align: center; padding: 2.5rem 1rem; background: radial-gradient(circle, rgba(147, 51, 234, 0.15) 0%, rgba(10, 8, 20, 1) 75%); border-radius: 12px; border: 1px solid var(--border-color); }
     .hero h1 { font-size: 2.2rem; color: var(--accent-neon-purple); margin-bottom: 0.5rem; }
     .hero p { color: var(--text-muted); font-size: 1rem; }
     
+    /* TARJETAS DE ESTADÍSTICAS */
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
     .stat-card { background-color: var(--card-bg); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 10px; text-align: center; transition: transform 0.2s, border-color 0.2s; }
     .stat-card:hover { transform: translateY(-4px); border-color: var(--accent-purple); box-shadow: 0 4px 20px rgba(168, 85, 247, 0.2); }
     .stat-card h3 { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; }
     .stat-card .number { font-size: 2rem; font-weight: bold; color: var(--accent-neon-purple); margin-top: 0.5rem; }
     
+    /* BOTONES DE ACCIÓN RÁPIDA */
     .quick-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
     .btn-action { background-color: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.8rem 1.2rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
     .btn-action:hover { border-color: var(--accent-purple); background-color: var(--border-color); color: var(--accent-neon-purple); }
     
-.dashboard-grid { 
-      display: flex; 
-      flex-direction: column; 
-      width: 100%; 
-    }
-    
-    .panel { 
-      background-color: var(--card-bg); 
-      border: 1px solid var(--border-color); 
-      border-radius: 10px; 
-      padding: 1.5rem; 
-      width: 100%; 
-    }
-    
-    .panel h2 { 
-      font-size: 1.1rem; 
-      color: var(--accent-neon-purple); 
-      margin-bottom: 1rem; 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-    }
-    
+    /* PANEL Y TABLA DE ALERTAS */
+    .dashboard-grid { display: flex; flex-direction: column; width: 100%; }
+    .panel { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.5rem; width: 100%; }
+    .panel h2 { font-size: 1.1rem; color: var(--accent-neon-purple); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border-color); text-align: left; font-size: 0.9rem; }
     th { color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; }
@@ -102,6 +84,8 @@
   </style>
 </head>
 <body>
+
+  <!-- BARRA DE NAVEGACIÓN PRINCIPAL -->
   <header>
     <div class="logo">🎮 GamerVault</div>
     <nav>
@@ -114,11 +98,13 @@
   </header>
 
   <div class="container">
+    <!-- BANNER CON SALUDO PERSONALIZADO -->
     <div class="hero">
       <h1>Panel de Control GamerVault</h1>
-      <p id="user-welcome">Gestión integral de inventario, stock crítico y control de almacén</p>
+      <p id="user-welcome">Cargando información del usuario...</p>
     </div>
 
+    <!-- METRICAS GENERALES DEL INVENTARIO -->
     <div class="stats-grid">
       <div class="stat-card">
         <h3>Total Productos</h3>
@@ -138,12 +124,14 @@
       </div>
     </div>
 
+    <!-- ACCESOS RÁPIDOS -->
     <div class="quick-actions">
       <a href="gestion.html" class="btn-action">➕ Nuevo Producto</a>
       <a href="productos.html" class="btn-action">🔍 Explorar Catálogo</a>
       <a href="usuarios.html" class="btn-action">👤 Administrar Usuarios</a>
     </div>
 
+    <!-- TABLA DE ALERTAS (PRODUCTOS CON STOCK CRÍTICO <= 5) -->
     <div class="dashboard-grid">
       <div class="panel">
         <h2>⚠️ Alertas de Stock Crítico</h2>
@@ -156,21 +144,22 @@
               <th>Acción</th>
             </tr>
           </thead>
-          <tbody id="critico-tbody">
-          </tbody>
+          <tbody id="critico-tbody"></tbody>
         </table>
       </div>
     </div>
   </div>
 
 <script>
+  // CERRAR SESIÓN Y LIMPIAR ALMACENAMIENTO LOCAL
   function cerrarSesion() {
     localStorage.removeItem('usuarioSesion');
     window.location.href = 'login.html';
   }
 
+  // CARGA DE DATOS Y ESTADÍSTICAS DESDE LA API
   async function cargarDashboard() {
-    // Mostrar saludo personalizado al usuario autenticado
+    // Mostrar saludo personalizado desde LocalStorage
     const sesionRaw = localStorage.getItem('usuarioSesion');
     if (sesionRaw) {
       try {
@@ -180,47 +169,46 @@
     }
 
     try {
-      const resP = await fetch('/api/productos');
+      // Peticiones simultáneas a la API de Productos y Usuarios
+      const [resP, resU] = await Promise.all([fetch('/api/productos'), fetch('/api/usuarios')]);
       const productos = await resP.json();
-
-      const resU = await fetch('/api/usuarios');
       const usuarios = await resU.json();
 
+      // Procesamiento de datos de productos
       if (Array.isArray(productos)) {
         document.getElementById('num-productos').textContent = productos.length;
         
+        // Cálculo del valor total de inventario
         const totalValor = productos.reduce((acc, p) => acc + ((p.precio || 0) * (p.stock || 0)), 0);
         document.getElementById('val-inventario').textContent = '$' + totalValor.toFixed(2);
 
-        const bajo = productos.filter(p => p.stock <= 5);
+        // Filtrar productos con stock crítico (5 o menos unidades)
+        const bajo = productos.filter(p => (p.stock || 0) <= 5);
         document.getElementById('stock-bajo').textContent = bajo.length;
 
         const tbody = document.getElementById('critico-tbody');
-        tbody.innerHTML = '';
-        if (bajo.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="4" style="color:var(--text-muted);">Sin stock crítico por el momento</td></tr>';
-        } else {
-          bajo.forEach(p => {
-            tbody.innerHTML += `
-              <tr>
-                <td>${p.nombre}</td>
-                <td>${p.categoria}</td>
-                <td><span class="badge-danger">${p.stock} unidades</span></td>
-                <td><a href="gestion.html" style="color: var(--accent-neon-purple); font-size:0.8rem;">Reponer</a></td>
-              </tr>
-            `;
-          });
-        }
+        tbody.innerHTML = bajo.length === 0 
+          ? '<tr><td colspan="4" style="color:var(--text-muted);">Sin stock crítico por el momento</td></tr>'
+          : bajo.map(p => `
+            <tr>
+              <td>${p.nombre}</td>
+              <td>${p.categoria}</td>
+              <td><span class="badge-danger">${p.stock} unidades</span></td>
+              <td><a href="gestion.html" style="color: var(--accent-neon-purple); font-size:0.8rem;">Reponer</a></td>
+            </tr>
+          `).join('');
       }
 
+      // Procesamiento de total de usuarios
       if (Array.isArray(usuarios)) {
         document.getElementById('num-usuarios').textContent = usuarios.length;
       }
     } catch (err) {
-      console.error('Error al cargar métricas:', err);
+      console.error('Error al cargar métricas del dashboard:', err);
     }
   }
 
+  // Ejecutar carga de datos al abrir el script
   cargarDashboard();
 </script>
 </body>
