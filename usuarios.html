@@ -84,7 +84,7 @@
   </header>
 
   <div class="container">
-    <!-- FORMULARIO DE GESTIÓN DE USUARIOS -->
+    <!-- FORMULARIO DE GESTIÓN DE USUARIOS (SIN CAMPO ROL) -->
     <div class="form-card">
       <h2 id="form-title">Control y Edición de Usuarios</h2>
       <br>
@@ -142,7 +142,7 @@
       </form>
     </div>
 
-    <!-- TABLA DE USUARIOS REGISTRADOS -->
+    <!-- TABLA DE USUARIOS REGISTRADOS (SIN COLUMNA ROL) -->
     <table>
       <thead>
         <tr>
@@ -162,7 +162,7 @@
   const API_USERS = '/api/usuarios';
   let listaUsuariosCache = [];
 
-  // OBTENER Y RENDRERIZAR USUARIOS EN LA TABLA
+  // OBTENER Y RENDERIZAR USUARIOS EN LA TABLA
   async function cargarUsuarios() {
     try {
       const res = await fetch(API_USERS);
@@ -171,7 +171,7 @@
       const tbody = document.getElementById('usuarios-tbody');
 
       if (!Array.isArray(usuarios) || usuarios.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Sin usuarios registrados</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Sin usuarios registrados</td></tr>';
         return;
       }
 
@@ -233,7 +233,7 @@
     document.getElementById('btn-cancel').style.display = 'none';
   }
 
-  // GUARDAR / ACTUALIZAR USUARIO EN LA API
+  // GUARDAR / ACTUALIZAR USUARIO EN LA API (SIN ENVIAR ROL)
   document.getElementById('user-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-user-submit');
