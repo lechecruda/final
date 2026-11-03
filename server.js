@@ -5,23 +5,31 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// Configuración de middlewares de Express para parsear JSON y servir archivos estáticos
 app.use(express.json());
 app.use(express.static(__dirname));
 
+// ==================================================================
+// 1. OBTENCIÓN Y LIMPIEZA DE LA CADENA DE CONEXIÓN (URI)
+// ==================================================================
 let MONGO_URI = process.env.MONGODB_URI || '';
 
 if (MONGO_URI) {
+  // Elimina comillas adicionales y asegura el formateo correcto de caracteres especiales (% -> %25)
   MONGO_URI = MONGO_URI.trim().replace(/^["']|["']$/g, '');
   if (MONGO_URI.includes('%') && !MONGO_URI.includes('%25')) {
     MONGO_URI = MONGO_URI.replace(/%(?![0-9a-fA-F]{2})/g, '%25');
   }
 }
 
+// Desactiva el almacenamiento en búfer de comandos si no hay conexión activa
 mongoose.set('bufferCommands', false);
 
-// ------------------------------------------------------------------
-// SCHEMAS AMPLIADOS
-// ------------------------------------------------------------------
+// ==================================================================
+// 2. DEFINICIÓN DE ESQUEMAS Y MODELOS DE MONGOOSE
+// ==================================================================
+
+// Esquema para la colección de Productos
 const ProductoSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
   sku: { type: String, default: '' },
@@ -34,6 +42,7 @@ const ProductoSchema = new mongoose.Schema({
   descripcion: { type: String, default: '' }
 }, { collection: 'productos', timestamps: true });
 
+// Esquema para la colección de Usuarios
 const UsuarioSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
   apPaterno: { type: String, required: true },
@@ -48,29 +57,40 @@ const UsuarioSchema = new mongoose.Schema({
   estado: { type: String, default: 'Activo' }
 }, { collection: 'usuarios', timestamps: true });
 
+// Modelos para interactuar con MongoDB
 const Producto = mongoose.model('Producto', ProductoSchema);
 const Usuario = mongoose.model('Usuario', UsuarioSchema);
 
-// Middleware de conexión
+// ==================================================================
+// 3. AQUÍ SE CONECTA A LA BASE DE DATOS (MIDDLEWARE DE CONEXIÓN)
+// ==================================================================
 async function asegurarConexion(req, res, next) {
+  // Si la conexión ya está establecida (readyState === 1), continúa a la siguiente función (next)
   if (mongoose.connection.readyState === 1) return next();
-  if (!MONGO_URI) return res.status(500).json({ error: 'Falta MONGODB_URI en Azure' });
+
+  // Valida que exista la variable de entorno MONGODB_URI
+  if (!MONGO_URI) return res.status(500).json({ error: 'Falta MONGODB_URI en las variables de entorno' });
 
   try {
+    // ➔ AQUÍ OCURRE LA CONEXIÓN A MONGODB / AZURE COSMOS DB
     await mongoose.connect(MONGO_URI, {
-      dbName: 'Productos',
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 5000
+      dbName: 'Productos',            // Nombre de la base de datos objetivo
+      serverSelectionTimeoutMS: 5000, // Tiempo límite para seleccionar servidor (5s)
+      connectTimeoutMS: 5000          // Tiempo límite para establecer conexión inicial (5s)
     });
-    next();
+    
+    next(); // Conexión exitosa, pasa a procesar la ruta solicitada
   } catch (err) {
+    // Error al conectar
     return res.status(503).json({ error: 'Error de conexión: ' + err.message });
   }
 }
 
-// ------------------------------------------------------------------
-// API PRODUCTOS (CRUD COMPLETO)
-// ------------------------------------------------------------------
+// ==================================================================
+// 4. RUTAS DE LA API - PRODUCTOS
+// ==================================================================
+
+// Obtener todos los productos
 app.get('/api/productos', asegurarConexion, async (req, res) => {
   try {
     const productos = await Producto.find();
@@ -80,6 +100,7 @@ app.get('/api/productos', asegurarConexion, async (req, res) => {
   }
 });
 
+// Crear un nuevo producto
 app.post('/api/productos', asegurarConexion, async (req, res) => {
   try {
     const nuevo = new Producto(req.body);
@@ -90,6 +111,7 @@ app.post('/api/productos', asegurarConexion, async (req, res) => {
   }
 });
 
+// Actualizar un producto por ID
 app.put('/api/productos/:id', asegurarConexion, async (req, res) => {
   try {
     const actualizado = await Producto.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -99,6 +121,7 @@ app.put('/api/productos/:id', asegurarConexion, async (req, res) => {
   }
 });
 
+// Eliminar un producto por ID
 app.delete('/api/productos/:id', asegurarConexion, async (req, res) => {
   try {
     await Producto.findByIdAndDelete(req.params.id);
@@ -108,9 +131,11 @@ app.delete('/api/productos/:id', asegurarConexion, async (req, res) => {
   }
 });
 
-// ------------------------------------------------------------------
-// API USUARIOS (CRUD COMPLETO Y LOGIN)
-// ------------------------------------------------------------------
+// ==================================================================
+// 5. RUTAS DE LA API - USUARIOS Y AUTENTICACIÓN
+// ==================================================================
+
+// Obtener todos los usuarios
 app.get('/api/usuarios', asegurarConexion, async (req, res) => {
   try {
     const usuarios = await Usuario.find();
@@ -120,6 +145,7 @@ app.get('/api/usuarios', asegurarConexion, async (req, res) => {
   }
 });
 
+// Crear un nuevo usuario
 app.post('/api/usuarios', asegurarConexion, async (req, res) => {
   try {
     const nuevo = new Usuario(req.body);
@@ -133,7 +159,7 @@ app.post('/api/usuarios', asegurarConexion, async (req, res) => {
 // Modificar usuario por ID (PUT)
 app.put('/api/usuarios/:id', asegurarConexion, async (req, res) => {
   try {
-    // Si en la edición no enviaron una nueva contraseña, evitamos borrar la existente
+    // Si al editar no envían contraseña nueva, se conserva la actual
     if (!req.body.password) {
       delete req.body.password;
     }
@@ -144,6 +170,7 @@ app.put('/api/usuarios/:id', asegurarConexion, async (req, res) => {
   }
 });
 
+// Eliminar un usuario por ID
 app.delete('/api/usuarios/:id', asegurarConexion, async (req, res) => {
   try {
     await Usuario.findByIdAndDelete(req.params.id);
@@ -153,7 +180,7 @@ app.delete('/api/usuarios/:id', asegurarConexion, async (req, res) => {
   }
 });
 
-// Endpoint de Login
+// Endpoint de Inicio de Sesión (Login)
 app.post('/api/login', asegurarConexion, async (req, res) => {
   const { usuario, password } = req.body;
   try {
@@ -170,19 +197,23 @@ app.post('/api/login', asegurarConexion, async (req, res) => {
   }
 });
 
-// ------------------------------------------------------------------
-// RUTAS DE MANEJO DE VISTAS (FALLBACK)
-// ------------------------------------------------------------------
-// Sirve la pantalla de login por defecto al entrar a la raíz
+// ==================================================================
+// 6. RUTAS PARA SERVIR LAS VISTAS (FRONTEND FALLBACK)
+// ==================================================================
+
+// Ruta raíz (/) -> Muestra login.html por defecto
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'login.html'));
 });
 
-// Cualquier otra ruta no capturada envía a login.html o index.html según necesites
+// Ruta comodín (*) -> Redirige cualquier otra petición no válida a login.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'login.html'));
 });
 
+// ==================================================================
+// 7. INICIO DEL SERVIDOR
+// ==================================================================
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en puerto ${PORT}`);
 });
