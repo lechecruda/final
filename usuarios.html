@@ -128,14 +128,6 @@
             <input type="password" id="u-password" placeholder="••••••••">
           </div>
           <div class="input-group">
-            <label for="u-rol">Rol de Usuario</label>
-            <select id="u-rol" required>
-              <option value="Administrador">Administrador</option>
-              <option value="Operador de Almacén">Operador de Almacén</option>
-              <option value="Solo Lectura">Solo Lectura</option>
-            </select>
-          </div>
-          <div class="input-group">
             <label for="u-estado">Estado del Acceso</label>
             <select id="u-estado" required>
               <option value="Activo">Activo</option>
@@ -222,7 +214,6 @@
     document.getElementById('u-telefono').value = u.telefono || '';
     document.getElementById('u-identificacion').value = u.identificacion || '';
     document.getElementById('u-direccion').value = u.direccion || '';
-    document.getElementById('u-rol').value = u.rol || 'Administrador';
     document.getElementById('u-estado').value = u.estado || 'Activo';
     
     const passInput = document.getElementById('u-password');
