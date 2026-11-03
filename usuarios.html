@@ -29,13 +29,13 @@
       justify-content: space-between;
       align-items: center;
     }
-
     .logo { color: var(--accent-neon-purple); font-size: 1.5rem; text-transform: uppercase; font-weight: bold; }
     nav a { color: var(--text-muted); text-decoration: none; margin-left: 1.5rem; font-weight: 600; }
     nav a:hover, nav a.active { color: var(--accent-neon-purple); text-shadow: 0 0 8px var(--accent-glow); }
 
     .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; width: 100%; }
 
+    /* TARJETA DEL FORMULARIO */
     .form-card {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -56,10 +56,12 @@
       outline: none;
     }
 
+    /* BOTONES */
     .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.8rem; }
     .btn-primary { background-color: var(--accent-purple); color: white; margin-top: 1rem; }
     .btn-danger { background-color: var(--danger); color: white; }
 
+    /* TABLA Y ETIQUETAS DE ESTADO (BADGES) */
     table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); border-radius: 8px; overflow: hidden; }
     th, td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border-color); text-align: left; }
     th { background-color: #0d0a1d; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; }
@@ -70,6 +72,7 @@
 </head>
 <body>
 
+  <!-- NAVEGACIÓN -->
   <header>
     <div class="logo">🎮 GamerVault</div>
     <nav>
@@ -81,6 +84,7 @@
   </header>
 
   <div class="container">
+    <!-- FORMULARIO DE GESTIÓN DE USUARIOS -->
     <div class="form-card">
       <h2 id="form-title">Control y Edición de Usuarios</h2>
       <br>
@@ -88,43 +92,43 @@
         <input type="hidden" id="u-id">
         <div class="form-grid">
           <div class="input-group">
-            <label>Nombre(s)</label>
+            <label for="u-nombre">Nombre(s)</label>
             <input type="text" id="u-nombre" placeholder="Ej. Alex" required>
           </div>
           <div class="input-group">
-            <label>Apellido Paterno</label>
+            <label for="u-appaterno">Apellido Paterno</label>
             <input type="text" id="u-appaterno" placeholder="Ej. Ramírez" required>
           </div>
           <div class="input-group">
-            <label>Apellido Materno</label>
+            <label for="u-apmaterno">Apellido Materno</label>
             <input type="text" id="u-apmaterno" placeholder="Ej. Gómez">
           </div>
           <div class="input-group">
-            <label>Nombre de Usuario (Login)</label>
+            <label for="u-usuario">Nombre de Usuario (Login)</label>
             <input type="text" id="u-usuario" placeholder="Ej. aramirez" required>
           </div>
           <div class="input-group">
-            <label>Correo Electrónico</label>
+            <label for="u-correo">Correo Electrónico</label>
             <input type="email" id="u-correo" placeholder="usuario@gamervault.com" required>
           </div>
           <div class="input-group">
-            <label>Teléfono</label>
+            <label for="u-telefono">Teléfono</label>
             <input type="tel" id="u-telefono" placeholder="7441234567">
           </div>
           <div class="input-group">
-            <label>RFC / CURP</label>
+            <label for="u-identificacion">RFC / CURP</label>
             <input type="text" id="u-identificacion" placeholder="RAMA900101XXX">
           </div>
           <div class="input-group">
-            <label>Dirección</label>
+            <label for="u-direccion">Dirección</label>
             <input type="text" id="u-direccion" placeholder="Av. Principal #123">
           </div>
           <div class="input-group">
-            <label>Contraseña (Dejar vacío para conservar la actual al editar)</label>
+            <label for="u-password">Contraseña (Vacío = conservar la actual)</label>
             <input type="password" id="u-password" placeholder="••••••••">
           </div>
           <div class="input-group">
-            <label>Rol de Usuario</label>
+            <label for="u-rol">Rol de Usuario</label>
             <select id="u-rol" required>
               <option value="Administrador">Administrador</option>
               <option value="Operador de Almacén">Operador de Almacén</option>
@@ -132,7 +136,7 @@
             </select>
           </div>
           <div class="input-group">
-            <label>Estado del Acceso</label>
+            <label for="u-estado">Estado del Acceso</label>
             <select id="u-estado" required>
               <option value="Activo">Activo</option>
               <option value="Inactivo">Inactivo</option>
@@ -146,6 +150,7 @@
       </form>
     </div>
 
+    <!-- TABLA DE USUARIOS REGISTRADOS -->
     <table>
       <thead>
         <tr>
@@ -158,8 +163,7 @@
           <th>Acciones</th>
         </tr>
       </thead>
-      <tbody id="usuarios-tbody">
-      </tbody>
+      <tbody id="usuarios-tbody"></tbody>
     </table>
   </div>
 
@@ -167,46 +171,44 @@
   const API_USERS = '/api/usuarios';
   let listaUsuariosCache = [];
 
+  // OBTENER Y RENDRERIZAR USUARIOS EN LA TABLA
   async function cargarUsuarios() {
     try {
       const res = await fetch(API_USERS);
       const usuarios = await res.json();
       listaUsuariosCache = usuarios;
       const tbody = document.getElementById('usuarios-tbody');
-      tbody.innerHTML = '';
 
       if (!Array.isArray(usuarios) || usuarios.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Sin usuarios registrados en la base de datos</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Sin usuarios registrados</td></tr>';
         return;
       }
 
-      usuarios.forEach(u => {
-        const nom = u.nombre || '';
-        const pat = u.apPaterno || '';
-        const mat = u.apMaterno || '';
-        const nombreCompleto = `${nom} ${pat} ${mat}`.trim() || 'Sin Nombre';
-        const usuarioNick = u.usuario || 'N/A';
+      tbody.innerHTML = usuarios.map(u => {
+        const nombreCompleto = `${u.nombre || ''} ${u.apPaterno || ''} ${u.apMaterno || ''}`.trim() || 'Sin Nombre';
+        const esInactivo = u.estado === 'Inactivo';
 
-        tbody.innerHTML += `
+        return `
           <tr>
-            <td><strong style="color: var(--accent-neon-purple);">${usuarioNick}</strong></td>
+            <td><strong style="color: var(--accent-neon-purple);">${u.usuario || 'N/A'}</strong></td>
             <td>${nombreCompleto}</td>
             <td>${u.correo || 'N/A'}</td>
             <td>${u.telefono || 'N/A'}</td>
             <td>${u.rol || 'Solo Lectura'}</td>
-            <td><span class="${u.estado === 'Inactivo' ? 'badge-inactive' : 'badge-active'}">${u.estado || 'Activo'}</span></td>
+            <td><span class="${esInactivo ? 'badge-inactive' : 'badge-active'}">${u.estado || 'Activo'}</span></td>
             <td>
               <button class="btn btn-primary" onclick="prepararEdicion('${u._id}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Editar</button>
               <button class="btn btn-danger" onclick="eliminarUsuario('${u._id}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Eliminar</button>
             </td>
           </tr>
         `;
-      });
+      }).join('');
     } catch (err) {
       console.error('Error cargando usuarios:', err);
     }
   }
 
+  // LLENAR CAMPOS PARA EDITAR UN USUARIO EXISTENTE
   function prepararEdicion(id) {
     const u = listaUsuariosCache.find(user => user._id === id);
     if (!u) return;
@@ -223,7 +225,6 @@
     document.getElementById('u-rol').value = u.rol || 'Administrador';
     document.getElementById('u-estado').value = u.estado || 'Activo';
     
-    // Al editar, la contraseña no es requerida en el HTML si no se quiere cambiar
     const passInput = document.getElementById('u-password');
     passInput.value = '';
     passInput.removeAttribute('required');
@@ -233,6 +234,7 @@
     document.getElementById('btn-cancel').style.display = 'inline-block';
   }
 
+  // REINICIAR FORMULARIO AL ESTADO INICIAL DE REGISTRO
   function limpiarFormulario() {
     document.getElementById('user-form').reset();
     document.getElementById('u-id').value = '';
@@ -242,6 +244,7 @@
     document.getElementById('btn-cancel').style.display = 'none';
   }
 
+  // GUARDAR / ACTUALIZAR USUARIO EN LA API
   document.getElementById('user-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-user-submit');
@@ -263,9 +266,7 @@
     };
 
     const pwd = document.getElementById('u-password').value;
-    if (pwd) {
-      data.password = pwd;
-    }
+    if (pwd) data.password = pwd;
 
     try {
       const res = await fetch(id ? `${API_USERS}/${id}` : API_USERS, {
@@ -275,9 +276,7 @@
       });
 
       const resData = await res.json();
-      if (!res.ok) {
-        throw new Error(resData.error || 'Error en la petición al servidor');
-      }
+      if (!res.ok) throw new Error(resData.error || 'Error en la petición');
 
       limpiarFormulario();
       await cargarUsuarios();
@@ -285,14 +284,11 @@
       alert('Error: ' + err.message);
     } finally {
       btn.disabled = false;
-      if (!document.getElementById('u-id').value) {
-        btn.textContent = 'Guardar Registro';
-      } else {
-        btn.textContent = 'Actualizar Usuario';
-      }
+      btn.textContent = id ? 'Actualizar Usuario' : 'Guardar Registro';
     }
   });
 
+  // ELIMINAR USUARIO
   async function eliminarUsuario(id) {
     if (confirm('¿Eliminar este usuario de la base de datos?')) {
       try {
@@ -308,6 +304,7 @@
     }
   }
 
+  // Cargar usuarios al iniciar
   cargarUsuarios();
 </script>
 </body>
