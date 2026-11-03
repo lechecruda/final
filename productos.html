@@ -19,6 +19,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
 
+    /* ENCABEZADO */
     header {
       background-color: var(--card-bg);
       border-bottom: 2px solid var(--accent-glow);
@@ -27,14 +28,13 @@
       justify-content: space-between;
       align-items: center;
     }
-
     .logo { color: var(--accent-neon-purple); font-size: 1.5rem; text-transform: uppercase; font-weight: bold; }
     nav a { color: var(--text-muted); text-decoration: none; margin-left: 1.5rem; font-weight: 600; }
     nav a:hover, nav a.active { color: var(--accent-neon-purple); text-shadow: 0 0 8px var(--accent-glow); }
 
     .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; width: 100%; }
 
-    /* Barra de Búsqueda */
+    /* CAMPO DE BÚSQUEDA Y FILTRADO */
     .search-box {
       width: 100%;
       background-color: var(--card-bg);
@@ -47,7 +47,7 @@
     }
     .search-box:focus { border-color: var(--accent-purple); box-shadow: 0 0 10px rgba(168, 85, 247, 0.3); }
 
-    /* Cards de Productos */
+    /* RETÍCULA DE TARJETAS DE PRODUCTO */
     .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
     .product-card {
       background-color: var(--card-bg);
@@ -67,6 +67,7 @@
 </head>
 <body>
 
+  <!-- BARRA DE NAVEGACIÓN -->
   <header>
     <div class="logo">🎮 GamerVault</div>
     <nav>
@@ -80,57 +81,61 @@
   <div class="container">
     <h2>Catálogo de Existencias</h2>
     <br>
-    <input type="text" class="search-box" id="search" placeholder="🔍 Buscar productos por nombre o categoría..." onkeyup="filterCards()">
+    <!-- CAJA DE BÚSQUEDA EN TIEMPO REAL -->
+    <input type="text" class="search-box" id="search" placeholder="🔍 Buscar productos por nombre o categoría..." oninput="filterCards()">
 
+    <!-- GRID DONDE SE IMPRIMEN LOS PRODUCTOS -->
     <div class="products-grid" id="grid">
       <p style="color: var(--text-muted);">Cargando catálogo desde MongoDB...</p>
     </div>
   </div>
 
   <script>
+    // CONSULTA Y RENDERIZADO DEL CATÁLOGO DESDE LA API
     async function cargarCatalogo() {
       const grid = document.getElementById('grid');
       try {
         const res = await fetch('/api/productos');
-        if (!res.ok) throw new Error('Respuesta de red KO');
+        if (!res.ok) throw new Error('Respuesta del servidor no disponible');
         
         const productos = await res.json();
-        grid.innerHTML = '';
 
         if (!Array.isArray(productos) || productos.length === 0) {
           grid.innerHTML = '<p style="color: var(--text-muted);">No hay productos registrados en la base de datos.</p>';
           return;
         }
 
-        productos.forEach(p => {
-          grid.innerHTML += `
-            <div class="product-card" data-name="${(p.nombre || '').toLowerCase()}" data-cat="${(p.categoria || '').toLowerCase()}">
-              <div>
-                <span class="product-category">${p.categoria}</span>
-                <h3 class="product-title">${p.nombre}</h3>
-              </div>
-              <div>
-                <div class="product-price">$${Number(p.precio || 0).toFixed(2)}</div>
-                <div class="product-stock">Stock: ${p.stock} unidades</div>
-              </div>
+        // Construcción dinámica de tarjetas HTML mediante mapeo
+        grid.innerHTML = productos.map(p => `
+          <div class="product-card" data-name="${(p.nombre || '').toLowerCase()}" data-cat="${(p.categoria || '').toLowerCase()}">
+            <div>
+              <span class="product-category">${p.categoria || 'General'}</span>
+              <h3 class="product-title">${p.nombre}</h3>
             </div>
-          `;
-        });
+            <div>
+              <div class="product-price">$${Number(p.precio || 0).toFixed(2)}</div>
+              <div class="product-stock">Stock: ${p.stock} unidades</div>
+            </div>
+          </div>
+        `).join('');
       } catch (err) {
         console.error('Error al cargar catálogo:', err);
         grid.innerHTML = '<p style="color: var(--text-muted);">Error al cargar los datos desde el servidor.</p>';
       }
     }
 
+    // FILTRO DINÁMICO EN EL FRONTEND POR NOMBRE O CATEGORÍA
     function filterCards() {
       const q = document.getElementById('search').value.toLowerCase();
       document.querySelectorAll('.product-card').forEach(card => {
-        const name = card.getAttribute('data-name') || '';
-        const cat = card.getAttribute('data-cat') || '';
+        const name = card.dataset.name;
+        const cat = card.dataset.cat;
+        // Muestra u oculta la tarjeta según coincidencia
         card.style.display = (name.includes(q) || cat.includes(q)) ? 'flex' : 'none';
       });
     }
 
+    // Cargar catálogo inicial
     cargarCatalogo();
   </script>
 </body>
