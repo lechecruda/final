@@ -150,7 +150,6 @@
           <th>Nombre Completo</th>
           <th>Correo</th>
           <th>Teléfono</th>
-          <th>Rol</th>
           <th>Estado</th>
           <th>Acciones</th>
         </tr>
@@ -186,7 +185,6 @@
             <td>${nombreCompleto}</td>
             <td>${u.correo || 'N/A'}</td>
             <td>${u.telefono || 'N/A'}</td>
-            <td>${u.rol || 'Solo Lectura'}</td>
             <td><span class="${esInactivo ? 'badge-inactive' : 'badge-active'}">${u.estado || 'Activo'}</span></td>
             <td>
               <button class="btn btn-primary" onclick="prepararEdicion('${u._id}')" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Editar</button>
@@ -252,7 +250,6 @@
       telefono: document.getElementById('u-telefono').value.trim(),
       identificacion: document.getElementById('u-identificacion').value.trim(),
       direccion: document.getElementById('u-direccion').value.trim(),
-      rol: document.getElementById('u-rol').value,
       estado: document.getElementById('u-estado').value
     };
 
