@@ -164,8 +164,7 @@
     if (sesionRaw) {
       try {
         const user = JSON.parse(sesionRaw);
-        document.getElementById('user-welcome').textContent = `Bienvenido(a), ${user.nombre || user.usuario} | Rol: ${user.rol || 'Usuario'}`;
-      } catch(e) {}
+document.getElementById('user-welcome').textContent = `Bienvenido(a), ${user.nombre || user.usuario}`;      } catch(e) {}
     }
 
     try {
